@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>wkl CS2灵敏度生成器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--card:#111827;--card2:#1a2236;
+  --primary:#f59e0b;--accent:#3b82f6;--accent2:#06b6d4;
+  --success:#22c55e;--danger:#ef4444;
+  --text:#e2e8f0;--muted:#64748b;--border:#1e293b;
+}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  min-height:100vh;overflow-x:hidden;
+}
+/* ===== 准星 ===== */
+#crosshair{
+  position:fixed;pointer-events:none;z-index:9999;
+  width:40px;height:40px;transform:translate(-50%,-50%);
+  display:none;
+}
+#crosshair .ch-h,#crosshair .ch-v{
+  position:absolute;background:var(--success);
+  box-shadow:0 0 4px rgba(34,197,94,.6);
+}
+#crosshair .ch-h{width:100%;height:2px;top:50%;transform:translateY(-50%)}
+#crosshair .ch-v{width:2px;height:100%;left:50%;transform:translateX(-50%)}
+#crosshair .ch-dot{
+  position:absolute;width:4px;height:4px;border-radius:50%;
+  background:var(--success);top:50%;left:50%;transform:translate(-50%,-50%);
+  box-shadow:0 0 6px rgba(34,197,94,.8);
+}
+#crosshair.tracking-mode .ch-h,
+#crosshair.tracking-mode .ch-v{background:var(--accent2);box-shadow:0 0 4px rgba(6,182,212,.6)}
+#crosshair.tracking-mode .ch-dot{background:var(--accent2);box-shadow:0 0 6px rgba(6,182,212,.8)}
+#crosshair.micro-mode .ch-h,
+#crosshair.micro-mode .ch-v{background:var(--primary);box-shadow:0 0 4px rgba(245,158,11,.6)}
+#crosshair.micro-mode .ch-dot{background:var(--primary);box-shadow:0 0 6px rgba(245,158,11,.8)}
+
+/* ===== 容器 ===== */
+.container{max-width:800px;margin:0 auto;padding:20px}
+.screen{display:none;animation:fadeIn .4s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes targetPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes hitFlash{0%{background:var(--success);transform:scale(1.3)}100%{background:transparent;transform:scale(1)}}
+@keyframes missFlash{0%{background:var(--danger);transform:scale(1.2)}100%{background:transparent;transform:scale(1)}}
+
+/* ===== 卡片 ===== */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:40px;margin:20px 0;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+}
+.card-sm{padding:24px;border-radius:12px}
+
+/* ===== 标题 ===== */
+h1{
+  font-size:2.2em;font-weight:800;text-align:center;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;margin-bottom:8px;
+}
+h2{font-size:1.5em;font-weight:700;color:var(--text);margin-bottom:12px}
+h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-align:center}
+.subtitle{text-align:center;color:var(--muted);font-size:.95em;margin-bottom:30px}
+
+/* ===== 按钮 ===== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 36px;border:none;border-radius:10px;
+  font-size:1.05em;font-weight:700;cursor:pointer;
+  transition:all .2s ease;position:relative;overflow:hidden;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--primary),#d97706);color:#000;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,.3)}
+.btn-accent{background:linear-gradient(135deg,var(--accent),#2563eb);color:#fff}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,.3)}
+.btn-outline{
+  background:transparent;border:2px solid var(--border);color:var(--text);
+}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.btn-group{display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+
+/* ===== 输入框 ===== */
+.input-group{margin:20px 0;text-align:center}
+.input-group label{display:block;font-size:.9em;color:var(--muted);margin-bottom:8px}
+.dpi-input{
+  width:200px;padding:14px 20px;border:2px solid var(--border);
+  border-radius:10px;background:var(--card2);color:var(--text);
+  font-size:1.3em;font-weight:700;text-align:center;
+  transition:border-color .2s;
+}
+.dpi-input:focus{outline:none;border-color:var(--primary)}
+.dpi-presets{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.dpi-preset{
+  padding:8px 16px;border:1px solid var(--border);border-radius:8px;
+  background:var(--card2);color:var(--muted);cursor:pointer;
+  font-size:.85em;transition:all .2s;
+}
+.dpi-preset:hover,.dpi-preset.active{border-color:var(--primary);color:var(--primary);background:rgba(245,158,11,.08)}
+
+/* ===== 测试区域 ===== */
+.test-area{
+  position:relative;width:700px;height:450px;
+  background:#0d1117;border:2px solid var(--border);
+  border-radius:12px;margin:20px auto;overflow:hidden;
+  cursor:none;
+}
+.test-area canvas{display:block}
+
+/* ===== 测试信息栏 ===== */
+.test-hud{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 20px;background:var(--card2);
+  border-radius:10px;margin:0 auto;width:700px;
+}
+.hud-item{text-align:center}
+.hud-label{font-size:.75em;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.hud-value{font-size:1.6em;font-weight:800;color:var(--primary);font-variant-numeric:tabular-nums}
+.hud-value.time{color:var(--accent2)}
+.hud-value.score{color:var(--success)}
+
+/* ===== 目标 ===== */
+.target{
+  position:absolute;border-radius:50%;cursor:none;
+  transition:transform .1s;
+}
+.target-precision{
+  width:44px;height:44px;
+  background:radial-gradient(circle,var(--danger) 0%,#991b1b 100%);
+  box-shadow:0 0 12px rgba(239,68,68,.5);
+  animation:targetPop .2s ease;
+}
+.target-precision::after{
+  content:'';position:absolute;width:14px;height:14px;border-radius:50%;
+  background:rgba(255,255,255,.9);top:50%;left:50%;transform:translate(-50%,-50%);
+}
+.target-micro{
+  width:36px;height:36px;
+  background:radial-gradient(circle,var(--primary) 0%,#92400e 100%);
+  box-shadow:0 0 12px rgba(245,158,11,.5);
+  animation:targetPop .15s ease;
+}
+.target-micro::after{
+  content:'';position:absolute;width:10px;height:10px;border-radius:50%;
+  background:rgba(255,255,255,.9);top:50%;left:50%;transform:translate(-50%,-50%);
+}
+.target.hit{animation:hitFlash .3s ease;pointer-events:none}
+.target.miss{animation:missFlash .3s ease}
+
+/* ===== 中心圆（微调测试） ===== */
+.center-circle{
+  position:absolute;width:50px;height:50px;border-radius:50%;
+  background:radial-gradient(circle,var(--accent) 0%,#1e40af 100%);
+  box-shadow:0 0 16px rgba(59,130,246,.4);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  cursor:none;transition:all .2s;
+}
+.center-circle::after{
+  content:'';position:absolute;width:14px;height:14px;border-radius:50%;
+  background:rgba(255,255,255,.85);top:50%;left:50%;transform:translate(-50%,-50%);
+}
+.center-circle.pulse{animation:pulse .6s ease infinite}
+
+/* ===== 进度条 ===== */
+.progress-bar{
+  width:700px;height:6px;background:var(--card2);
+  border-radius:3px;margin:10px auto;overflow:hidden;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:3px;transition:width .3s linear;
+}
+
+/* ===== 分数环 ===== */
+.score-ring-container{display:flex;justify-content:center;gap:40px;margin:30px 0;flex-wrap:wrap}
+.score-ring{text-align:center}
+.score-ring svg{width:120px;height:120px;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.score-ring .bg{stroke:var(--border)}
+.score-ring .fg{transition:stroke-dashoffset 1s ease}
+.score-ring .label{font-size:.85em;color:var(--muted);margin-top:8px}
+.score-ring .value{font-size:1.8em;font-weight:800}
+
+/* ===== 结果面板 ===== */
+.result-main{
+  text-align:center;padding:30px;
+  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(59,130,246,.08));
+  border:1px solid rgba(245,158,11,.2);border-radius:16px;margin:20px 0;
+}
+.sensitivity-value{
+  font-size:4em;font-weight:900;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1.2;
+}
+.sensitivity-label{font-size:.9em;color:var(--muted);margin-top:4px}
+.sensitivity-cmd{
+  display:inline-block;padding:10px 24px;background:var(--card2);
+  border:1px solid var(--border);border-radius:8px;margin-top:16px;
+  font-family:'Courier New',monospace;font-size:1.2em;color:var(--primary);
+  cursor:pointer;transition:all .2s;user-select:all;
+}
+.sensitivity-cmd:hover{border-color:var(--primary);background:rgba(245,158,11,.1)}
+.conv-table{width:100%;border-collapse:collapse;margin:20px 0}
+.conv-table th,.conv-table td{padding:10px 16px;text-align:center;border-bottom:1px solid var(--border)}
+.conv-table th{color:var(--muted);font-size:.8em;text-transform:uppercase;letter-spacing:1px}
+.conv-table td{font-weight:600}
+.conv-table .highlight{color:var(--primary);font-size:1.1em}
+.tip-box{
+  padding:16px 20px;background:rgba(59,130,246,.06);
+  border:1px solid rgba(59,130,246,.15);border-radius:10px;
+  margin:10px 0;font-size:.9em;color:var(--muted);line-height:1.6;
+}
+.tip-box strong{color:var(--accent2)}
+.range-bar{
+  position:relative;height:40px;background:var(--card2);
+  border-radius:20px;margin:20px 0;overflow:visible;
+}
+.range-fill{
+  position:absolute;height:100%;border-radius:20px;
+  background:linear-gradient(90deg,rgba(34,197,94,.15),rgba(245,158,11,.15),rgba(239,68,68,.15));
+}
+.range-marker{
+  position:absolute;top:-8px;width:4px;height:56px;
+  background:var(--primary);border-radius:2px;
+  transform:translateX(-50%);
+  box-shadow:0 0 8px rgba(245,158,11,.6);
+}
+.range-labels{display:flex;justify-content:space-between;font-size:.75em;color:var(--muted);margin-top:4px}
+.test-score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
+.test-score-card{
+  padding:16px;background:var(--card2);border-radius:10px;text-align:center;
+  border:1px solid var(--border);
+}
+.test-score-card .name{font-size:.8em;color:var(--muted);margin-bottom:6px}
+.test-score-card .score{font-size:1.6em;font-weight:800}
+.test-score-card .detail{font-size:.75em;color:var(--muted);margin-top:4px}
+
+/* ===== 步骤指示器 ===== */
+.steps{display:flex;justify-content:center;gap:8px;margin:20px 0}
+.step{
+  width:10px;height:10px;border-radius:50%;background:var(--border);
+  transition:all .3s;
+}
+.step.active{background:var(--primary);box-shadow:0 0 8px rgba(245,158,11,.4)}
+.step.done{background:var(--success)}
+
+/* ===== 测试说明 ===== */
+.test-instructions{
+  text-align:center;padding:16px;background:var(--card2);
+  border-radius:10px;margin:10px auto;width:700px;
+}
+.test-instructions p{color:var(--muted);font-size:.9em;line-height:1.6}
+.test-instructions .key{color:var(--primary);font-weight:600}
+
+/* ===== 倒计时覆盖层 ===== */
+.countdown-overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(13,17,23,.85);z-index:10;
+  font-size:5em;font-weight:900;color:var(--primary);
+}
+.countdown-overlay.hidden{display:none}
+
+/* ===== 复制提示 ===== */
+.copy-toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);
+  padding:12px 24px;background:var(--success);color:#000;
+  border-radius:8px;font-weight:600;transition:transform .3s ease;z-index:10000;
+}
+.copy-toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ===== 响应式 ===== */
+@media(max-width:760px){
+  .test-area,.test-hud,.progress-bar,.test-instructions{width:100%!important}
+  .test-area{height:350px!important}
+  .card{padding:20px}
+  h1{font-size:1.6em}
+  .sensitivity-value{font-size:2.8em}
+  .test-score-grid{grid-template-columns:1fr}
+  .score-ring-container{gap:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- 准星 -->
+<div id="crosshair">
+  <div class="ch-h"></div>
+  <div class="ch-v"></div>
+  <div class="ch-dot"></div>
+</div>
+
+<!-- 复制提示 -->
+<div id="copyToast" class="copy-toast">已复制到剪贴板！</div>
+
+<div class="container">
+
+  <!-- ========== 欢迎界面 ========== -->
+  <div id="welcomeScreen" class="screen active">
+    <div class="card" style="margin-top:40px">
+      <h1>🎯 wkl CS2灵敏度生成器</h1>
+      <p class="subtitle">通过 3 项专业测试，科学计算你的最佳 CS2 灵敏度</p>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:30px 0">
+        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:12px;background:var(--card2)">
+          <div style="font-size:2em;margin-bottom:8px">🎯</div>
+          <div style="font-weight:700;margin-bottom:4px">追踪测试</div>
+          <div style="font-size:.8em;color:var(--muted)">鼠标跟随移动目标<br>测试你的追踪稳定性</div>
+        </div>
+        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:12px;background:var(--card2)">
+          <div style="font-size:2em;margin-bottom:8px">🔫</div>
+          <div style="font-weight:700;margin-bottom:4px">精准度测试</div>
+          <div style="font-size:.8em;color:var(--muted)">点击随机出现的目标<br>测试你的定位准确度</div>
+        </div>
+        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:12px;background:var(--card2)">
+          <div style="font-size:2em;margin-bottom:8px">⚡</div>
+          <div style="font-weight:700;margin-bottom:4px">微调测试</div>
+          <div style="font-size:.8em;color:var(--muted)">快速微调瞄准近距离目标<br>测试你的精细控制力</div>
+        </div>
+      </div>
+
+      <div class="tip-box" style="text-align:center">
+        <strong>⚠️ 测试前准备：</strong>请关闭鼠标加速（Windows 指针精确度），使用你日常玩 CS2 时的鼠标和鼠标垫。<br>
+        测试过程中请使用你<strong>最自然的握鼠姿势</strong>，不要刻意控制。
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="showScreen('dpiScreen')">开始测试 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== DPI 输入 ========== -->
+  <div id="dpiScreen" class="screen">
+    <div class="card" style="margin-top:40px;text-align:center">
+      <div class="steps">
+        <div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div>
+      </div>
+      <h2>输入你的鼠标 DPI</h2>
+      <p class="subtitle">DPI 可以在鼠标驱动软件中查看和设置</p>
+
+      <div class="input-group">
+        <input type="number" id="dpiInput" class="dpi-input" placeholder="DPI" min="100" max="16000" value="800">
+      </div>
+
+      <div class="dpi-presets">
+        <div class="dpi-preset" onclick="setDPI(400)">400</div>
+        <div class="dpi-preset" onclick="setDPI(800)">800</div>
+        <div class="dpi-preset active" onclick="setDPI(800)">800</div>
+        <div class="dpi-preset" onclick="setDPI(1000)">1000</div>
+        <div class="dpi-preset" onclick="setDPI(1200)">1200</div>
+        <div class="dpi-preset" onclick="setDPI(1600)">1600</div>
+        <div class="dpi-preset" onclick="setDPI(3200)">3200</div>
+      </div>
+
+      <div class="tip-box" style="margin-top:24px">
+        <strong>💡 不确定 DPI？</strong><br>
+        常见鼠标默认 DPI：罗技 GPW/GPX 系列默认 800，雷蛇 Viper 系列默认 800，<br>
+        卓威 ZA 系列默认 800/1600。你也可以在鼠标驱动软件中精确查看。
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-outline" onclick="showScreen('welcomeScreen')">← 返回</button>
+        <button class="btn btn-primary" onclick="startTests()">确认，开始测试 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 测试 1：追踪测试 ========== -->
+  <div id="trackingScreen" class="screen">
+    <div class="steps">
+      <div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div>
+    </div>
+    <div class="test-hud" id="trackingHud">
+      <div class="hud-item"><div class="hud-label">测试</div><div style="font-weight:700">追踪测试</div></div>
+      <div class="hud-item"><div class="hud-label">时间</div><div class="hud-value time" id="trackingTime">15</div></div>
+      <div class="hud-item"><div class="hud-label">命中率</div><div class="hud-value score" id="trackingAccuracy">0%</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="trackingProgress" style="width:0%"></div></div>
+    <div class="test-area" id="trackingArea" style="position:relative">
+      <canvas id="trackingCanvas" width="700" height="450"></canvas>
+      <div class="countdown-overlay" id="trackingCountdown">3</div>
+    </div>
+    <div class="test-instructions">
+      <p>将<span class="key">准星</span>保持在<span class="key">移动的蓝色球体</span>上，<strong>不需要点击</strong>。<br>
+      鼠标碰到蓝色球体即触发计分，保持跟随越久分数越高。</p>
+    </div>
+  </div>
+
+  <!-- ========== 追踪测试结果 ========== -->
+  <div id="trackingResultScreen" class="screen">
+    <div class="card" style="margin-top:20px;text-align:center">
+      <h2>📊 追踪测试结果</h2>
+      <div class="score-ring-container">
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="bg" cx="60" cy="60" r="50"/>
+            <circle class="fg" id="trackingScoreRing" cx="60" cy="60" r="50"
+              stroke="var(--accent2)" stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="value" id="trackingScoreValue" style="color:var(--accent2)">0</div>
+          <div class="label">追踪得分</div>
+        </div>
+      </div>
+      <div id="trackingDetail" style="color:var(--muted);font-size:.9em"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startPrecisionTest()">下一项：精准度测试 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 测试 2：精准度测试 ========== -->
+  <div id="precisionScreen" class="screen">
+    <div class="steps">
+      <div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div>
+    </div>
+    <div class="test-hud" id="precisionHud">
+      <div class="hud-item"><div class="hud-label">测试</div><div style="font-weight:700">精准度测试</div></div>
+      <div class="hud-item"><div class="hud-label">时间</div><div class="hud-value time" id="precisionTime">25</div></div>
+      <div class="hud-item"><div class="hud-label">命中</div><div class="hud-value score" id="precisionHits">0/0</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="precisionProgress" style="width:0%"></div></div>
+    <div class="test-area" id="precisionArea" style="position:relative">
+      <div class="countdown-overlay" id="precisionCountdown">3</div>
+    </div>
+    <div class="test-instructions">
+      <p>目标出现后<strong>立即点击</strong>，尽快尽可能多地击中目标。<br>
+      测试你的<span class="key">定位速度</span>和<span class="key">点击精准度</span>。</p>
+    </div>
+  </div>
+
+  <!-- ========== 精准度测试结果 ========== -->
+  <div id="precisionResultScreen" class="screen">
+    <div class="card" style="margin-top:20px;text-align:center">
+      <h2>📊 精准度测试结果</h2>
+      <div class="score-ring-container">
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="bg" cx="60" cy="60" r="50"/>
+            <circle class="fg" id="precisionScoreRing" cx="60" cy="60" r="50"
+              stroke="var(--primary)" stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="value" id="precisionScoreValue" style="color:var(--primary)">0</div>
+          <div class="label">精准度得分</div>
+        </div>
+      </div>
+      <div id="precisionDetail" style="color:var(--muted);font-size:.9em"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startMicroTest()">下一项：微调测试 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 测试 3：微调测试 ========== -->
+  <div id="microScreen" class="screen">
+    <div class="steps">
+      <div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div>
+    </div>
+    <div class="test-hud" id="microHud">
+      <div class="hud-item"><div class="hud-label">测试</div><div style="font-weight:700">微调测试</div></div>
+      <div class="hud-item"><div class="hud-label">时间</div><div class="hud-value time" id="microTime">20</div></div>
+      <div class="hud-item"><div class="hud-label">命中</div><div class="hud-value score" id="microHits">0/0</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="microProgress" style="width:0%"></div></div>
+    <div class="test-area" id="microArea" style="position:relative">
+      <div class="center-circle pulse" id="microCenter"></div>
+      <div class="countdown-overlay" id="microCountdown">3</div>
+    </div>
+    <div class="test-instructions">
+      <p>从<span class="key">中心蓝点</span>出发，快速点击出现的<span class="key">橙色目标</span>。<br>
+      测试你的<span class="key">微调定位能力</span>和<span class="key">精细控制力</span>。</p>
+    </div>
+  </div>
+
+  <!-- ========== 微调测试结果 ========== -->
+  <div id="microResultScreen" class="screen">
+    <div class="card" style="margin-top:20px;text-align:center">
+      <h2>📊 微调测试结果</h2>
+      <div class="score-ring-container">
+        <div class="score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="bg" cx="60" cy="60" r="50"/>
+            <circle class="fg" id="microScoreRing" cx="60" cy="60" r="50"
+              stroke="var(--success)" stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="value" id="microScoreValue" style="color:var(--success)">0</div>
+          <div class="label">微调得分</div>
+        </div>
+      </div>
+      <div id="microDetail" style="color:var(--muted);font-size:.9em"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="calculateResult()">查看我的灵敏度 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 最终结果 ========== -->
+  <div id="resultScreen" class="screen">
+    <div class="card" style="margin-top:20px">
+      <h1 style="font-size:1.6em;margin-bottom:4px">🎯 你的 CS2 专属灵敏度</h1>
+      <p class="subtitle" id="resultSubtitle">基于你的测试数据生成</p>
+
+      <div class="result-main">
+        <div class="sensitivity-value" id="finalSens">2.00</div>
+        <div class="sensitivity-label">推荐 CS2 灵敏度</div>
+        <div style="margin-top:8px;color:var(--muted);font-size:.9em">
+          eDPI: <span id="finalEdpi" style="color:var(--primary);font-weight:700">1600</span>
+          &nbsp;|&nbsp;
+          180° 约 <span id="finalCm180" style="color:var(--accent2);font-weight:700">35</span> cm / 360° 约 <span id="finalCm360" style="color:var(--accent2);font-weight:700">70</span> cm
+        </div>
+        <div class="sensitivity-cmd" id="sensCmd" onclick="copySensitivity()" title="点击复制">
+          sensitivity <span id="sensCmdValue">2.00</span>
+        </div>
+      </div>
+
+      <!-- 灵敏度范围条 -->
+      <div style="margin:24px 0">
+        <div style="font-size:.85em;color:var(--muted);margin-bottom:6px">推荐灵敏度范围</div>
+        <div class="range-bar">
+          <div class="range-fill" style="left:10%;width:80%"></div>
+          <div class="range-marker" id="rangeMarker" style="left:50%"></div>
+        </div>
+        <div class="range-labels">
+          <span id="rangeLow">低</span>
+          <span>← 慢 &nbsp; 灵敏度范围 &nbsp; 快 →</span>
+          <span id="rangeHigh">高</span>
+        </div>
+      </div>
+
+      <!-- 各测试得分 -->
+      <h3 style="text-align:left;margin-top:24px">📈 测试数据总览</h3>
+      <div class="test-score-grid" id="testScoreGrid"></div>
+
+      <!-- 转换表 -->
+      <h3 style="text-align:left;margin-top:24px">🔄 不同 DPI 下的灵敏度对照</h3>
+      <table class="conv-table" id="convTable"></table>
+
+      <!-- 分析建议 -->
+      <h3 style="text-align:left;margin-top:24px">💡 个性化建议</h3>
+      <div id="adviceContainer"></div>
+
+      <div class="btn-group" style="margin-top:30px">
+        <button class="btn btn-outline" onclick="resetAll()">🔄 重新测试</button>
+        <button class="btn btn-accent" onclick="copyAll()">📋 复制灵敏度</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================
+// 全局状态
+// ============================================
+const State = {
+  dpi: 800,
+  // 追踪测试
+  trackingScore: 0,
+  trackingAccuracy: 0,
+  trackingAvgOffset: 0,
+  trackingSamples: 0,
+  trackingHits: 0,
+  // 精准度测试
+  precisionScore: 0,
+  precisionAccuracy: 0,
+  precisionHits: 0,
+  precisionTotal: 0,
+  precisionAvgTime: 0,
+  precisionTimes: [],
+  // 微调测试
+  microScore: 0,
+  microAccuracy: 0,
+  microHits: 0,
+  microTotal: 0,
+  microAvgTime: 0,
+  microTimes: [],
+  // 最终
+  finalSensitivity: 0,
+  finalEdpi: 0,
+};
+
+// ============================================
+// DOM 引用
+// ============================================
+const crosshair = document.getElementById('crosshair');
+const copyToast = document.getElementById('copyToast');
+
+// ============================================
+// 工具函数
+// ============================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // 只在测试界面显示准星
+  const testScreens = ['trackingScreen','precisionScreen','microScreen'];
+  if (testScreens.includes(id)) {
+    crosshair.style.display = 'block';
+    crosshair.className = '';
+    if (id === 'trackingScreen') crosshair.classList.add('tracking-mode');
+    if (id === 'microScreen') crosshair.classList.add('micro-mode');
+  } else {
+    crosshair.style.display = 'none';
+  }
+}
+
+function setDPI(val) {
+  document.getElementById('dpiInput').value = val;
+  document.querySelectorAll('.dpi-preset').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function showToast(msg) {
+  copyToast.textContent = msg;
+  copyToast.classList.add('show');
+  setTimeout(() => copyToast.classList.remove('show'), 2000);
+}
+
+function copySensitivity() {
+  const cmd = document.getElementById('sensCmd').textContent.trim();
+  navigator.clipboard.writeText(cmd).then(() => showToast('已复制: ' + cmd));
+}
+
+function copyAll() {
+  const sens = State.finalSensitivity.toFixed(2);
+  const edpi = State.finalEdpi.toFixed(0);
+  const text = `CS2 灵敏度: ${sens} | eDPI: ${edpi} | 命令: sensitivity ${sens}`;
+  navigator.clipboard.writeText(text).then(() => showToast('灵敏度信息已复制！'));
+}
+
+// 全局鼠标跟踪
+document.addEventListener('mousemove', e => {
+  crosshair.style.left = e.clientX + 'px';
+  crosshair.style.top = e.clientY + 'px';
+});
+
+// ============================================
+// 开始测试
+// ============================================
+function startTests() {
+  const dpi = parseInt(document.getElementById('dpiInput').value);
+  if (!dpi || dpi < 100 || dpi > 16000) {
+    showToast('请输入有效的 DPI（100-16000）');
+    return;
+  }
+  State.dpi = dpi;
+  startTrackingTest();
+}
+
+// ============================================
+// 测试 1：追踪测试
+// ============================================
+let trackingAnimId = null;
+let trackingStartTime = 0;
+const TRACKING_DURATION = 15000; // 15 秒
+
+function startTrackingTest() {
+  showScreen('trackingScreen');
+  // 重置状态
+  State.trackingScore = 0;
+  State.trackingAccuracy = 0;
+  State.trackingAvgOffset = 0;
+  State.trackingSamples = 0;
+  State.trackingHits = 0;
+
+  const canvas = document.getElementById('trackingCanvas');
+  const ctx = canvas.getContext('2d');
+  const area = document.getElementById('trackingArea');
+  const countdownEl = document.getElementById('trackingCountdown');
+
+  // 重置 HUD
+  document.getElementById('trackingTime').textContent = '15';
+  document.getElementById('trackingAccuracy').textContent = '0%';
+  document.getElementById('trackingProgress').style.width = '0%';
+
+  // 倒计时 3-2-1
+  countdownEl.classList.remove('hidden');
+  let count = 3;
+  countdownEl.textContent = count;
+  const countInterval = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countdownEl.textContent = count;
+    } else {
+      clearInterval(countInterval);
+      countdownEl.classList.add('hidden');
+      runTrackingTest(canvas, ctx, area);
+    }
+  }, 800);
+}
+
+function runTrackingTest(canvas, ctx, area) {
+  const W = canvas.width;
+  const H = canvas.height;
+  const targetRadius = 28;
+  let mouseX = W / 2, mouseY = H / 2;
+  let totalOffset = 0;
+  let hitFrames = 0;
+  let totalFrames = 0;
+
+  // 监听鼠标在区域内的位置
+  const onMove = e => {
+    const rect = area.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+  };
+  area.addEventListener('mousemove', onMove);
+
+  trackingStartTime = performance.now();
+
+  function animate(now) {
+    const elapsed = now - trackingStartTime;
+    const progress = Math.min(elapsed / TRACKING_DURATION, 1);
+    const remaining = Math.max(0, Math.ceil((TRACKING_DURATION - elapsed) / 1000));
+
+    // 目标位置（Lissajous 曲线）
+    const t = elapsed / 1000;
+    const targetX = W / 2 + (W / 2 - 60) * Math.sin(t * 1.3 + 0.5) * Math.cos(t * 0.4);
+    const targetY = H / 2 + (H / 2 - 60) * Math.sin(t * 0.9 + 1.2) * Math.cos(t * 0.6);
+
+    // 计算距离
+    const dx = mouseX - targetX;
+    const dy = mouseY - targetY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const isHit = dist <= targetRadius;
+
+    totalFrames++;
+    if (isHit) hitFrames++;
+    totalOffset += dist;
+
+    // 绘制
+    ctx.clearRect(0, 0, W, H);
+
+    // 背景网格
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // 运动轨迹（尾巴）
+    ctx.strokeStyle = isHit ? 'rgba(6,182,212,0.15)' : 'rgba(239,68,68,0.1)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, targetRadius + 10, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 目标球体
+    const gradient = ctx.createRadialGradient(targetX, targetY, 0, targetX, targetY, targetRadius);
+    if (isHit) {
+      gradient.addColorStop(0, '#67e8f9');
+      gradient.addColorStop(1, '#0891b2');
+    } else {
+      gradient.addColorStop(0, '#60a5fa');
+      gradient.addColorStop(1, '#1d4ed8');
+    }
+    ctx.beginPath();
+    ctx.arc(targetX, targetY, targetRadius, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // 目标高光
+    ctx.beginPath();
+    ctx.arc(targetX - 6, targetY - 6, targetRadius * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fill();
+
+    // 命中/未命中指示
+    if (isHit) {
+      ctx.beginPath();
+      ctx.arc(targetX, targetY, targetRadius + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(6,182,212,0.5)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    // 连接线（鼠标到目标）
+    if (!isHit) {
+      ctx.beginPath();
+      ctx.moveTo(mouseX, mouseY);
+      ctx.lineTo(targetX, targetY);
+      ctx.strokeStyle = 'rgba(239,68,68,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // 更新 HUD
+    const accuracy = totalFrames > 0 ? Math.round((hitFrames / totalFrames) * 100) : 0;
+    document.getElementById('trackingTime').textContent = remaining;
+    document.getElementById('trackingAccuracy').textContent = accuracy + '%';
+    document.getElementById('trackingProgress').style.width = (progress * 100) + '%';
+
+    if (progress < 1) {
+      trackingAnimId = requestAnimationFrame(animate);
+    } else {
+      // 测试结束
+      area.removeEventListener('mousemove', onMove);
+      State.trackingAccuracy = accuracy;
+      State.trackingAvgOffset = totalFrames > 0 ? (totalOffset / totalFrames).toFixed(1) : 999;
+      State.trackingSamples = totalFrames;
+      State.trackingHits = hitFrames;
+      // 计算追踪得分：命中率权重 70%，平均偏移权重 30%
+      const offsetScore = Math.max(0, Math.min(100, 100 - (parseFloat(State.trackingAvgOffset) / 2)));
+      State.trackingScore = Math.round(accuracy * 0.7 + offsetScore * 0.3);
+      showTrackingResult();
+    }
+  }
+
+  trackingAnimId = requestAnimationFrame(animate);
+}
+
+function showTrackingResult() {
+  showScreen('trackingResultScreen');
+  const score = State.trackingScore;
+  const ring = document.getElementById('trackingScoreRing');
+  const circumference = 314; // 2 * π * 50
+  const offset = circumference - (score / 100) * circumference;
+  ring.style.strokeDashoffset = offset;
+
+  // 颜色
+  let color = 'var(--danger)';
+  if (score >= 70) color = 'var(--success)';
+  else if (score >= 40) color = 'var(--primary)';
+  ring.setAttribute('stroke', color);
+  document.getElementById('trackingScoreValue').textContent = score;
+  document.getElementById('trackingScoreValue').style.color = color;
+
+  let desc = '';
+  if (score >= 80) desc = '追踪能力出色！你适合偏低灵敏度，发挥你的精准控制优势。';
+  else if (score >= 60) desc = '追踪能力不错，继续练习可以更进一步。中等偏低灵敏度适合你。';
+  else if (score >= 40) desc = '追踪稳定性一般，中等灵敏度可以帮助你平衡速度和精度。';
+  else desc = '追踪需要加强练习，适当偏高的灵敏度可能帮助你弥补追踪不足。';
+  document.getElementById('trackingDetail').innerHTML =
+    `命中率 <strong style="color:var(--accent2)">${State.trackingAccuracy}%</strong> | ` +
+    `平均偏移 <strong style="color:var(--accent2)">${State.trackingAvgOffset}px</strong><br>` +
+    `<span style="color:var(--text)">${desc}</span>`;
+}
+
+// ============================================
+// 测试 2：精准度测试
+// ============================================
+let precisionTimerId = null;
+let precisionSpawnTimer = null;
+const PRECISION_DURATION = 25000; // 25 秒
+
+function startPrecisionTest() {
+  showScreen('precisionScreen');
+  // 重置
+  State.precisionScore = 0;
+  State.precisionAccuracy = 0;
+  State.precisionHits = 0;
+  State.precisionTotal = 0;
+  State.precisionTimes = [];
+
+  const area = document.getElementById('precisionArea');
+  // 清除旧目标
+  area.querySelectorAll('.target-precision').forEach(t => t.remove());
+
+  document.getElementById('precisionTime').textContent = '25';
+  document.getElementById('precisionHits').textContent = '0/0';
+  document.getElementById('precisionProgress').style.width = '0%';
+
+  const countdownEl = document.getElementById('precisionCountdown');
+  countdownEl.classList.remove('hidden');
+  let count = 3;
+  countdownEl.textContent = count;
+  const countInterval = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countdownEl.textContent = count;
+    } else {
+      clearInterval(countInterval);
+      countdownEl.classList.add('hidden');
+      runPrecisionTest(area);
+    }
+  }, 800);
+}
+
+function runPrecisionTest(area) {
+  const startTime = performance.now();
+  const targetSize = 44;
+  const padding = targetSize;
+  const areaW = 700;
+  const areaH = 450;
+
+  // 生成目标
+  function spawnTarget() {
+    const elapsed = performance.now() - startTime;
+    if (elapsed >= PRECISION_DURATION) return;
+
+    const target = document.createElement('div');
+    target.className = 'target target-precision';
+    const x = padding + Math.random() * (areaW - 2 * padding);
+    const y = padding + Math.random() * (areaH - 2 * padding);
+    target.style.left = (x - targetSize / 2) + 'px';
+    target.style.top = (y - targetSize / 2) + 'px';
+
+    const spawnTime = performance.now();
+    State.precisionTotal++;
+
+    target.addEventListener('click', e => {
+      e.stopPropagation();
+      const hitTime = performance.now() - spawnTime;
+      State.precisionHits++;
+      State.precisionTimes.push(hitTime);
+      target.classList.add('hit');
+      setTimeout(() => target.remove(), 200);
+      updatePrecisionHud(startTime);
+    });
+
+    area.appendChild(target);
+
+    // 目标 2.5 秒后消失（未命中）
+    setTimeout(() => {
+      if (target.parentNode && !target.classList.contains('hit')) {
+        target.classList.add('miss');
+        setTimeout(() => target.remove(), 200);
+      }
+    }, 2500);
+
+    // 下一个目标的间隔（根据时间逐渐加快）
+    const progress = elapsed / PRECISION_DURATION;
+    const interval = 1200 - progress * 500; // 从 1.2s 逐渐缩短到 0.7s
+    precisionSpawnTimer = setTimeout(spawnTarget, interval);
+  }
+
+  function updatePrecisionHud(startT) {
+    const elapsed = performance.now() - startT;
+    const remaining = Math.max(0, Math.ceil((PRECISION_DURATION - elapsed) / 1000));
+    const progress = Math.min(elapsed / PRECISION_DURATION, 1);
+
+    document.getElementById('precisionTime').textContent = remaining;
+    document.getElementById('precisionHits').textContent = State.precisionHits + '/' + State.precisionTotal;
+    document.getElementById('precisionProgress').style.width = (progress * 100) + '%';
+  }
+
+  // HUD 更新循环
+  function updateHud() {
+    const elapsed = performance.now() - startTime;
+    if (elapsed >= PRECISION_DURATION) return;
+    updatePrecisionHud(startTime);
+    precisionTimerId = requestAnimationFrame(updateHud);
+  }
+
+  // 开始
+  spawnTarget();
+  requestAnimationFrame(updateHud);
+
+  // 测试结束
+  setTimeout(() => {
+    clearTimeout(precisionSpawnTimer);
+    cancelAnimationFrame(precisionTimerId);
+    // 清理剩余目标
+    area.querySelectorAll('.target-precision').forEach(t => t.remove());
+
+    State.precisionAccuracy = State.precisionTotal > 0
+      ? Math.round((State.precisionHits / State.precisionTotal) * 100) : 0;
+    State.precisionAvgTime = State.precisionTimes.length > 0
+      ? (State.precisionTimes.reduce((a, b) => a + b, 0) / State.precisionTimes.length).toFixed(0)
+      : 9999;
+    // 精准度得分：命中率 60%，反应速度 40%
+    const speedScore = Math.max(0, Math.min(100, 100 - (parseFloat(State.precisionAvgTime) - 200) / 5));
+    State.precisionScore = Math.round(State.precisionAccuracy * 0.6 + speedScore * 0.4);
+    showPrecisionResult();
+  }, PRECISION_DURATION + 300);
+}
+
+function showPrecisionResult() {
+  showScreen('precisionResultScreen');
+  const score = State.precisionScore;
+  const ring = document.getElementById('precisionScoreRing');
+  const circumference = 314;
+  const offset = circumference - (score / 100) * circumference;
+  ring.style.strokeDashoffset = offset;
+
+  let color = 'var(--danger)';
+  if (score >= 70) color = 'var(--success)';
+  else if (score >= 40) color = 'var(--primary)';
+  ring.setAttribute('stroke', color);
+  document.getElementById('precisionScoreValue').textContent = score;
+  document.getElementById('precisionScoreValue').style.color = color;
+
+  let desc = '';
+  if (score >= 80) desc = '精准度极高！你的定位能力很强，可以使用较低的灵敏度来发挥这个优势。';
+  else if (score >= 60) desc = '定位能力不错，中等灵敏度能让你兼顾速度和精度。';
+  else if (score >= 40) desc = '定位还有提升空间，中等偏高的灵敏度可以帮你更快定位。';
+  else desc = '精准度需要更多练习，偏高的灵敏度可能帮助弥补定位速度的不足。';
+  document.getElementById('precisionDetail').innerHTML =
+    `命中 <strong style="color:var(--primary)">${State.precisionHits}/${State.precisionTotal}</strong> ` +
+    `(${State.precisionAccuracy}%) | 平均反应 <strong style="color:var(--primary)">${State.precisionAvgTime}ms</strong><br>` +
+    `<span style="color:var(--text)">${desc}</span>`;
+}
+
+// ============================================
+// 测试 3：微调测试
+// ============================================
+let microTimerId = null;
+const MICRO_DURATION = 20000; // 20 秒
+
+function startMicroTest() {
+  showScreen('microScreen');
+  State.microScore = 0;
+  State.microAccuracy = 0;
+  State.microHits = 0;
+  State.microTotal = 0;
+  State.microTimes = [];
+
+  const area = document.getElementById('microArea');
+  area.querySelectorAll('.target-micro').forEach(t => t.remove());
+
+  document.getElementById('microTime').textContent = '20';
+  document.getElementById('microHits').textContent = '0/0';
+  document.getElementById('microProgress').style.width = '0%';
+
+  const countdownEl = document.getElementById('microCountdown');
+  countdownEl.classList.remove('hidden');
+  let count = 3;
+  countdownEl.textContent = count;
+  const countInterval = setInterval(() => {
+    count--;
+    if (count > 0) {
+      countdownEl.textContent = count;
+    } else {
+      clearInterval(countInterval);
+      countdownEl.classList.add('hidden');
+      runMicroTest(area);
+    }
+  }, 800);
+}
+
+function runMicroTest(area) {
+  const startTime = performance.now();
+  const centerX = 350;
+  const centerY = 225;
+  const targetSize = 36;
+
+  function spawnMicroTarget() {
+    const elapsed = performance.now() - startTime;
+    if (elapsed >= MICRO_DURATION) return;
+
+    // 随机角度和距离（30-140px，微调范围）
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 40 + Math.random() * 100;
+    const tx = centerX + Math.cos(angle) * distance;
+    const ty = centerY + Math.sin(angle) * distance;
+
+    // 确保在范围内
+    const clampedX = Math.max(targetSize, Math.min(700 - targetSize, tx));
+    const clampedY = Math.max(targetSize, Math.min(450 - targetSize, ty));
+
+    const target = document.createElement('div');
+    target.className = 'target target-micro';
+    target.style.left = (clampedX - targetSize / 2) + 'px';
+    target.style.top = (clampedY - targetSize / 2) + 'px';
+
+    const spawnTime = performance.now();
+    State.microTotal++;
+
+    target.addEventListener('click', e => {
+      e.stopPropagation();
+      const hitTime = performance.now() - spawnTime;
+      State.microHits++;
+      State.microTimes.push(hitTime);
+      target.classList.add('hit');
+      setTimeout(() => target.remove(), 150);
+      // 生成下一个
+      setTimeout(spawnMicroTarget, 200);
+    });
+
+    area.appendChild(target);
+
+    // 3 秒后消失
+    setTimeout(() => {
+      if (target.parentNode && !target.classList.contains('hit')) {
+        target.classList.add('miss');
+        setTimeout(() => {
+          target.remove();
+          spawnMicroTarget();
+        }, 150);
+      }
+    }, 3000);
+  }
+
+  function updateHud() {
+    const elapsed = performance.now() - startTime;
+    if (elapsed >= MICRO_DURATION) return;
+    const remaining = Math.max(0, Math.ceil((MICRO_DURATION - elapsed) / 1000));
+    const progress = Math.min(elapsed / MICRO_DURATION, 1);
+    document.getElementById('microTime').textContent = remaining;
+    document.getElementById('microHits').textContent = State.microHits + '/' + State.microTotal;
+    document.getElementById('microProgress').style.width = (progress * 100) + '%';
+    microTimerId = requestAnimationFrame(updateHud);
+  }
+
+  spawnMicroTarget();
+  requestAnimationFrame(updateHud);
+
+  setTimeout(() => {
+    cancelAnimationFrame(microTimerId);
+    area.querySelectorAll('.target-micro').forEach(t => t.remove());
+
+    State.microAccuracy = State.microTotal > 0
+      ? Math.round((State.microHits / State.microTotal) * 100) : 0;
+    State.microAvgTime = State.microTimes.length > 0
+      ? (State.microTimes.reduce((a, b) => a + b, 0) / State.microTimes.length).toFixed(0)
+      : 9999;
+    // 微调得分：命中率 50%，反应速度 50%
+    const speedScore = Math.max(0, Math.min(100, 100 - (parseFloat(State.microAvgTime) - 150) / 4));
+    State.microScore = Math.round(State.microAccuracy * 0.5 + speedScore * 0.5);
+    showMicroResult();
+  }, MICRO_DURATION + 300);
+}
+
+function showMicroResult() {
+  showScreen('microResultScreen');
+  const score = State.microScore;
+  const ring = document.getElementById('microScoreRing');
+  const circumference = 314;
+  const offset = circumference - (score / 100) * circumference;
+  ring.style.strokeDashoffset = offset;
+
+  let color = 'var(--danger)';
+  if (score >= 70) color = 'var(--success)';
+  else if (score >= 40) color = 'var(--primary)';
+  ring.setAttribute('stroke', color);
+  document.getElementById('microScoreValue').textContent = score;
+  document.getElementById('microScoreValue').style.color = color;
+
+  let desc = '';
+  if (score >= 80) desc = '微调能力极强！你的精细控制力很好，低灵敏度能最大化这个优势。';
+  else if (score >= 60) desc = '微调表现不错，中低灵敏度适合你的风格。';
+  else if (score >= 40) desc = '微调能力一般，中等灵敏度可以帮助你在微调时有更好的容错。';
+  else desc = '微调需要练习，偏高灵敏度可能导致过度校正，建议配合练习降低灵敏度。';
+  document.getElementById('microDetail').innerHTML =
+    `命中 <strong style="color:var(--success)">${State.microHits}/${State.microTotal}</strong> ` +
+    `(${State.microAccuracy}%) | 平均反应 <strong style="color:var(--success)">${State.microAvgTime}ms</strong><br>` +
+    `<span style="color:var(--text)">${desc}</span>`;
+}
+
+// ============================================
+// 计算最终灵敏度
+// ============================================
+function calculateResult() {
+  const dpi = State.dpi;
+  const tScore = State.trackingScore;   // 0-100
+  const pScore = State.precisionScore;  // 0-100
+  const mScore = State.microScore;      // 0-100
+
+  // 加权综合分
+  const weighted = tScore * 0.35 + pScore * 0.30 + mScore * 0.35;
+
+  // 计算目标 eDPI
+  // 加权分 0 → eDPI 1500（高灵敏度，帮助弥补控制不足）
+  // 加权分 50 → eDPI 1060
+  // 加权分 100 → eDPI 620（低灵敏度，发挥控制优势）
+  let targetEdpi = 1500 - weighted * 8.8;
+  targetEdpi = Math.max(500, Math.min(1800, targetEdpi));
+
+  // 计算灵敏度
+  const sensitivity = targetEdpi / dpi;
+  // 保留两位小数
+  const roundedSens = Math.round(sensitivity * 100) / 100;
+
+  State.finalSensitivity = roundedSens;
+  State.finalEdpi = Math.round(roundedSens * dpi);
+
+  // 显示结果
+  showScreen('resultScreen');
+
+  document.getElementById('finalSens').textContent = roundedSens.toFixed(2);
+  document.getElementById('finalEdpi').textContent = State.finalEdpi;
+  document.getElementById('sensCmdValue').textContent = roundedSens.toFixed(2);
+
+  // 180° 转动距离（cm）
+  // CS2 公式: cm/360 = (360 / (sens × DPI × yaw)) × 2.54, yaw = 0.022
+  const YAW = 0.022;
+  const cm360 = (360 / (roundedSens * dpi * YAW)) * 2.54;
+  const cm180 = cm360 / 2;
+  document.getElementById('finalCm360').textContent = cm360.toFixed(1);
+  document.getElementById('finalCm180').textContent = cm180.toFixed(1);
+
+  // 范围条
+  const minSens = 500 / dpi;
+  const maxSens = 1800 / dpi;
+  const rangePercent = ((roundedSens - minSens) / (maxSens - minSens)) * 100;
+  document.getElementById('rangeMarker').style.left = Math.max(5, Math.min(95, rangePercent)) + '%';
+  document.getElementById('rangeLow').textContent = minSens.toFixed(2);
+  document.getElementById('rangeHigh').textContent = maxSens.toFixed(2);
+
+  // 测试得分网格
+  document.getElementById('testScoreGrid').innerHTML = `
+    <div class="test-score-card">
+      <div class="name">🎯 追踪测试</div>
+      <div class="score" style="color:var(--accent2)">${tScore}</div>
+      <div class="detail">命中率 ${State.trackingAccuracy}% | 偏移 ${State.trackingAvgOffset}px</div>
+    </div>
+    <div class="test-score-card">
+      <div class="name">🔫 精准度测试</div>
+      <div class="score" style="color:var(--primary)">${pScore}</div>
+      <div class="detail">命中 ${State.precisionHits}/${State.precisionTotal} | 反应 ${State.precisionAvgTime}ms</div>
+    </div>
+    <div class="test-score-card">
+      <div class="name">⚡ 微调测试</div>
+      <div class="score" style="color:var(--success)">${mScore}</div>
+      <div class="detail">命中 ${State.microHits}/${State.microTotal} | 反应 ${State.microAvgTime}ms</div>
+    </div>
+  `;
+
+  // 转换表
+  const dpis = [400, 800, 1000, 1200, 1600, 3200];
+  let tableHtml = '<thead><tr><th>DPI</th><th>灵敏度</th><th>eDPI</th><th>cm/360°</th></tr></thead><tbody>';
+  dpis.forEach(d => {
+    const s = State.finalEdpi / d;
+    const sr = Math.round(s * 100) / 100;
+    const c360 = (360 / (sr * d * YAW)) * 2.54;
+    const isCurrentDpi = d === dpi;
+    tableHtml += `<tr${isCurrentDpi ? ' style="background:rgba(245,158,11,.08)"' : ''}>
+      <td${isCurrentDpi ? ' class="highlight"' : ''}>${d}${isCurrentDpi ? ' ← 当前' : ''}</td>
+      <td${isCurrentDpi ? ' class="highlight"' : ''}>${sr.toFixed(2)}</td>
+      <td>${State.finalEdpi}</td>
+      <td>${c360.toFixed(1)}</td>
+    </tr>`;
+  });
+  tableHtml += '</tbody>';
+  document.getElementById('convTable').innerHTML = tableHtml;
+
+  // 个性化建议
+  let adviceHtml = '';
+  if (tScore < 50) {
+    adviceHtml += `<div class="tip-box">
+      <strong>🎯 追踪建议：</strong>你的追踪稳定性偏低。建议在游戏中多练习追踪移动目标（如 Aimg responders 训练）。
+      当前推荐的灵敏度偏高，这是为了补偿追踪不足。随着追踪能力提升，可以适当降低灵敏度。
+    </div>`;
+  } else if (tScore >= 80) {
+    adviceHtml += `<div class="tip-box">
+      <strong>🎯 追踪出色！</strong>你的追踪能力很强，推荐使用偏低灵敏度来最大化这个优势。
+      低灵敏度 + 强追踪 = 稳定的中远距离对枪能力。
+    </div>`;
+  }
+
+  if (pScore < 50) {
+    adviceHtml += `<div class="tip-box">
+      <strong>🔫 精准度建议：</strong>点击精准度有提升空间。建议练习 Aimg Six Shots 或类似精准度训练。
+      注意不要为了追求速度而牺牲准确度，先准后快。
+    </div>`;
+  }
+
+  if (mScore < 50) {
+    adviceHtml += `<div class="tip-box">
+      <strong>⚡ 微调建议：</strong>精细控制力需要加强。灵敏度如果太高，微调时容易"过头"。
+      建议从推荐灵敏度开始，如果微调经常过头，尝试降低 0.2-0.3 的灵敏度。
+    </div>`;
+  } else if (mScore >= 80) {
+    adviceHtml += `<div class="tip-box">
+      <strong>⚡ 微调出色！</strong>你的精细控制力很好，可以放心使用较低的灵敏度。
+      低灵敏度在 CS2 中的优势是：甩枪后能快速微调回准，非常适合peek对枪。
+    </div>`;
+  }
+
+  adviceHtml += `<div class="tip-box">
+    <strong>💡 通用建议：</strong>
+    <ul style="margin:8px 0 0 16px;line-height:1.8">
+      <li>将 <code style="background:var(--card2);padding:2px 6px;border-radius:4px">sensitivity ${roundedSens.toFixed(2)}</code> 输入 CS2 控制台即可使用</li>
+      <li>确保关闭 Windows 鼠标加速（控制面板 → 鼠标 → 指针选项 → 取消"提高指针精确度"）</li>
+      <li>建议至少使用 1 周适应新灵敏度，前两天可能感觉"怪"是正常的</li>
+      <li>如果使用中感觉转身困难，可以适当提高 0.1-0.2；如果瞄准过头，降低 0.1-0.2</li>
+      <li>推荐范围：<strong>${(roundedSens * 0.85).toFixed(2)} ~ ${(roundedSens * 1.15).toFixed(2)}</strong></li>
+    </ul>
+  </div>`;
+
+  document.getElementById('adviceContainer').innerHTML = adviceHtml;
+
+  // 副标题
+  let level = '';
+  if (weighted >= 80) level = '高手向 · 低灵敏度精准流';
+  else if (weighted >= 60) level = '进阶向 · 中低灵敏度均衡流';
+  else if (weighted >= 40) level = '成长向 · 中等灵敏度均衡流';
+  else level = '潜力向 · 中高灵敏度速度流';
+  document.getElementById('resultSubtitle').textContent =
+    `综合评分 ${Math.round(weighted)}/100 · ${level}`;
+}
+
+// ============================================
+// 重置
+// ============================================
+function resetAll() {
+  if (trackingAnimId) cancelAnimationFrame(trackingAnimId);
+  if (precisionTimerId) cancelAnimationFrame(precisionTimerId);
+  if (precisionSpawnTimer) clearTimeout(precisionSpawnTimer);
+  if (microTimerId) cancelAnimationFrame(microTimerId);
+  showScreen('welcomeScreen');
+}
+
+// 防止测试区域外鼠标事件干扰
+document.addEventListener('contextmenu', e => {
+  if (e.target.closest('.test-area')) e.preventDefault();
+});
+</script>
+</body>
+</html>

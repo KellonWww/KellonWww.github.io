@@ -285,6 +285,48 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 }
 .copy-toast.show{transform:translateX(-50%) translateY(0)}
 
+/* ===== 广告位招租 ===== */
+.ad-sidebar{
+  position:fixed;top:50%;transform:translateY(-50%);
+  width:160px;z-index:100;pointer-events:none;
+  display:flex;flex-direction:column;gap:12px;
+}
+.ad-sidebar.left{left:12px}
+.ad-sidebar.right{right:12px}
+.ad-card{
+  background:var(--card);border:2px dashed var(--border);
+  border-radius:10px;padding:14px 10px;text-align:center;
+  pointer-events:auto;cursor:pointer;transition:all .3s;
+  position:relative;overflow:hidden;
+  animation:adFloat 3s ease-in-out infinite;
+}
+.ad-card:nth-child(2){animation-delay:.5s}
+.ad-card:nth-child(3){animation-delay:1s}
+.ad-card:hover{
+  border-color:var(--primary);transform:scale(1.05);
+  box-shadow:0 4px 20px rgba(245,158,11,.2);
+}
+.ad-card .ad-tag{
+  position:absolute;top:6px;right:6px;
+  font-size:.6em;color:var(--muted);
+  background:var(--card2);padding:2px 6px;border-radius:4px;
+}
+.ad-card .ad-icon{font-size:1.8em;margin-bottom:6px}
+.ad-card .ad-title{font-size:.8em;font-weight:700;color:var(--primary);margin-bottom:4px}
+.ad-card .ad-desc{font-size:.65em;color:var(--muted);line-height:1.4}
+.ad-card .ad-price{
+  display:inline-block;margin-top:6px;padding:3px 10px;
+  background:linear-gradient(135deg,var(--danger),#dc2626);
+  color:#fff;border-radius:12px;font-size:.65em;font-weight:700;
+}
+@keyframes adFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+@media(max-width:1100px){
+  .ad-sidebar{display:none}
+}
+
 /* ===== 响应式 ===== */
 @media(max-width:760px){
   .test-area,.test-hud,.progress-bar,.test-instructions{width:100%!important}
@@ -308,6 +350,56 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 
 <!-- 复制提示 -->
 <div id="copyToast" class="copy-toast">已复制到剪贴板！</div>
+
+<!-- ===== 左侧广告位 ===== -->
+<div class="ad-sidebar left">
+  <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>this.style.transform='',200)">
+    <span class="ad-tag">广告</span>
+    <div class="ad-icon">💰</div>
+    <div class="ad-title">广告位招租</div>
+    <div class="ad-desc">月租仅需 ¥998<br>送 CS2 优先匹配</div>
+    <div class="ad-price">限时打折</div>
+  </div>
+  <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>this.style.transform='',200)">
+    <span class="ad-tag">推广</span>
+    <div class="ad-icon">🎮</div>
+    <div class="ad-title">CS2 代练</div>
+    <div class="ad-desc">白银 → 全球精英<br>包月只要 298</div>
+    <div class="ad-price">假一赔十</div>
+  </div>
+  <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>this.style.transform='',200)">
+    <span class="ad-tag">合作</span>
+    <div class="ad-icon">🖱️</div>
+    <div class="ad-title">鼠标推荐</div>
+    <div class="ad-desc">用了这个鼠标<br>自动爆头率 +200%</div>
+    <div class="ad-price">主播同款</div>
+  </div>
+</div>
+
+<!-- ===== 右侧广告位 ===== -->
+<div class="ad-sidebar right">
+  <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>this.style.transform='',200)">
+    <span class="ad-tag">招商</span>
+    <div class="ad-icon">🏆</div>
+    <div class="ad-title">此处广告<br>虚位以待</div>
+    <div class="ad-desc">老板大气一点<br>直接包年打八折</div>
+    <div class="ad-price">¥8888/年</div>
+  </div>
+  <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>this.style.transform='',200)">
+    <span class="ad-tag">爆款</span>
+    <div class="ad-icon">⌨️</div>
+    <div class="ad-title">机械键盘</div>
+    <div class="ad-desc">青轴 Cherry 轴体<br>吵到室友退学</div>
+    <div class="ad-price">宿舍神器</div>
+  </div>
+  <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>this.style.transform='',200)">
+    <span class="ad-tag">神秘</span>
+    <div class="ad-icon">🔮</div>
+    <div class="ad-title">玄学灵敏度</div>
+    <div class="ad-desc">大师开光灵敏度<br>用了必上 FACEIT</div>
+    <div class="ad-price">心诚则灵</div>
+  </div>
+</div>
 
 <div class="container">
 

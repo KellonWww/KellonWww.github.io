@@ -20,7 +20,7 @@ body{
 /* ===== 准星 ===== */
 #crosshair{
   position:fixed;pointer-events:none;z-index:9999;
-  width:40px;height:40px;transform:translate(-50%,-50%);
+  width:40px;height:40px;left:0;top:0;
   display:none;
 }
 #crosshair .ch-h,#crosshair .ch-v{
@@ -638,10 +638,18 @@ function copyAll() {
   navigator.clipboard.writeText(text).then(() => showToast('灵敏度信息已复制！'));
 }
 
-// 全局鼠标跟踪
+// 全局鼠标跟踪（rAF + transform 零延迟）
+let _mx = 0, _my = 0, _rafPending = false;
 document.addEventListener('mousemove', e => {
-  crosshair.style.left = e.clientX + 'px';
-  crosshair.style.top = e.clientY + 'px';
+  _mx = e.clientX;
+  _my = e.clientY;
+  if (!_rafPending) {
+    _rafPending = true;
+    requestAnimationFrame(() => {
+      crosshair.style.transform = `translate(${_mx}px, ${_my}px) translate(-50%, -50%)`;
+      _rafPending = false;
+    });
+  }
 });
 
 // ============================================

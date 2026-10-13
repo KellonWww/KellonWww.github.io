@@ -3,25 +3,45 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>wkl CS2灵敏度生成器</title>
+<title>kale's cs2 DPI TEST</title>
+<meta name="description" content="通过 3 项专业测试，科学计算你的最佳 CS2 灵敏度">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0a0e1a;--card:#111827;--card2:#1a2236;
-  --primary:#f59e0b;--accent:#3b82f6;--accent2:#06b6d4;
-  --success:#22c55e;--danger:#ef4444;
-  --text:#e2e8f0;--muted:#64748b;--border:#1e293b;
+  --bg:#0A0A0A;--card:#111;--card2:#1A1A1A;--card3:#222;
+  --primary:#FF6B35;--primary-dim:#CC5529;--accent:#F7C548;
+  --success:#2DD4BF;--danger:#F43F5E;
+  --text:#F5F5F5;--text-secondary:#999;--muted:#666;--border:#2A2A2A;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --shadow:0 4px 24px rgba(0,0,0,.6);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.4);
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;
 }
 /* 白天模式 */
 body.light-mode{
-  --bg:#f0f2f5;--card:#ffffff;--card2:#f8f9fa;
-  --text:#1a1a2e;--muted:#6b7280;--border:#e5e7eb;
+  --bg:#F5F5F0;--card:#FFFFFF;--card2:#FAFAF7;--card3:#F0F0EB;
+  --text:#1A1A1A;--text-secondary:#555;--muted:#888;--border:#E0E0D8;
+  --shadow:0 4px 24px rgba(0,0,0,.08);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.05);
 }
 body{
   background:var(--bg);color:var(--text);
-  font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  font-family:var(--font-body);
   min-height:100vh;overflow-x:hidden;
+  line-height:1.6;
 }
+/* Noise overlay for texture */
+body::before{
+  content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9998;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+body.light-mode::before{opacity:.015}
 /* ===== 准星 ===== */
 #crosshair{
   position:fixed;pointer-events:none;z-index:9999;
@@ -30,27 +50,27 @@ body{
 }
 #crosshair .ch-h,#crosshair .ch-v{
   position:absolute;background:var(--success);
-  box-shadow:0 0 4px rgba(34,197,94,.6);
+  box-shadow:0 0 6px rgba(45,212,191,.5);
 }
 #crosshair .ch-h{width:100%;height:2px;top:50%;transform:translateY(-50%)}
 #crosshair .ch-v{width:2px;height:100%;left:50%;transform:translateX(-50%)}
 #crosshair .ch-dot{
   position:absolute;width:4px;height:4px;border-radius:50%;
   background:var(--success);top:50%;left:50%;transform:translate(-50%,-50%);
-  box-shadow:0 0 6px rgba(34,197,94,.8);
+  box-shadow:0 0 8px rgba(45,212,191,.7);
 }
 #crosshair.tracking-mode .ch-h,
-#crosshair.tracking-mode .ch-v{background:var(--accent2);box-shadow:0 0 4px rgba(6,182,212,.6)}
-#crosshair.tracking-mode .ch-dot{background:var(--accent2);box-shadow:0 0 6px rgba(6,182,212,.8)}
+#crosshair.tracking-mode .ch-v{background:var(--accent);box-shadow:0 0 6px rgba(247,197,72,.5)}
+#crosshair.tracking-mode .ch-dot{background:var(--accent);box-shadow:0 0 8px rgba(247,197,72,.7)}
 #crosshair.micro-mode .ch-h,
-#crosshair.micro-mode .ch-v{background:var(--primary);box-shadow:0 0 4px rgba(245,158,11,.6)}
-#crosshair.micro-mode .ch-dot{background:var(--primary);box-shadow:0 0 6px rgba(245,158,11,.8)}
+#crosshair.micro-mode .ch-v{background:var(--primary);box-shadow:0 0 6px rgba(255,107,53,.5)}
+#crosshair.micro-mode .ch-dot{background:var(--primary);box-shadow:0 0 8px rgba(255,107,53,.7)}
 
 /* ===== 容器 ===== */
-.container{max-width:800px;margin:0 auto;padding:20px}
-.screen{display:none;animation:fadeIn .4s ease}
+.container{max-width:820px;margin:0 auto;padding:24px}
+.screen{display:none;animation:fadeIn .5s cubic-bezier(.4,0,.2,1)}
 .screen.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 @keyframes targetPop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes hitFlash{0%{background:var(--success);transform:scale(1.3)}100%{background:transparent;transform:scale(1)}}
@@ -59,65 +79,85 @@ body{
 /* ===== 卡片 ===== */
 .card{
   background:var(--card);border:1px solid var(--border);
-  border-radius:16px;padding:40px;margin:20px 0;
-  box-shadow:0 4px 24px rgba(0,0,0,.4);
+  border-radius:var(--radius-lg);padding:40px;margin:20px 0;
+  box-shadow:var(--shadow);position:relative;overflow:hidden;
 }
-.card-sm{padding:24px;border-radius:12px}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,107,53,.3),transparent);
+}
+.card-sm{padding:24px;border-radius:var(--radius)}
 
-/* ===== 标题 ===== */
-h1{
-  font-size:2.2em;font-weight:800;text-align:center;
-  background:linear-gradient(135deg,var(--primary),var(--accent));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;margin-bottom:8px;
+/* ===== Logo & Header ===== */
+.logo-area{
+  display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;
 }
-h2{font-size:1.5em;font-weight:700;color:var(--text);margin-bottom:12px}
-h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-align:center}
-.subtitle{text-align:center;color:var(--muted);font-size:.95em;margin-bottom:30px}
+.logo-area img{width:48px;height:48px}
+h1{
+  font-family:var(--font-display);
+  font-size:2.4em;font-weight:700;text-align:center;
+  letter-spacing:-.02em;line-height:1.1;
+  color:var(--text);margin-bottom:8px;
+}
+h1 .accent{color:var(--primary)}
+h2{
+  font-family:var(--font-display);
+  font-size:1.5em;font-weight:600;color:var(--text);
+  margin-bottom:12px;letter-spacing:-.01em;
+}
+h3{
+  font-family:var(--font-display);
+  font-size:1.05em;font-weight:500;color:var(--text-secondary);
+  margin-bottom:20px;
+}
+.subtitle{text-align:center;color:var(--text-secondary);font-size:.95em;margin-bottom:30px;line-height:1.7}
 
 /* ===== 按钮 ===== */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  padding:14px 36px;border:none;border-radius:10px;
-  font-size:1.05em;font-weight:700;cursor:pointer;
-  transition:all .2s ease;position:relative;overflow:hidden;
+  padding:14px 36px;border:none;border-radius:var(--radius);
+  font-family:var(--font-display);font-size:1em;font-weight:600;
+  cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;
 }
 .btn-primary{
-  background:linear-gradient(135deg,var(--primary),#d97706);color:#000;
+  background:var(--primary);color:#fff;
 }
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,.3)}
-.btn-accent{background:linear-gradient(135deg,var(--accent),#2563eb);color:#fff}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(59,130,246,.3)}
+.btn-primary:hover{background:var(--primary-dim);transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,107,53,.25)}
+.btn-primary:active{transform:translateY(0);box-shadow:none}
+.btn-accent{background:var(--accent);color:#1A1A1A}
+.btn-accent:hover{background:#E5B63E;transform:translateY(-2px);box-shadow:0 8px 24px rgba(247,197,72,.25)}
+.btn-accent:active{transform:translateY(0)}
 .btn-outline{
-  background:transparent;border:2px solid var(--border);color:var(--text);
+  background:transparent;border:1px solid var(--border);color:var(--text);
 }
-.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);background:rgba(255,107,53,.05)}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
 .btn-group{display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap}
 
 /* ===== 输入框 ===== */
 .input-group{margin:20px 0;text-align:center}
-.input-group label{display:block;font-size:.9em;color:var(--muted);margin-bottom:8px}
+.input-group label{display:block;font-size:.85em;color:var(--text-secondary);margin-bottom:8px;font-weight:500}
 .dpi-input{
-  width:200px;padding:14px 20px;border:2px solid var(--border);
-  border-radius:10px;background:var(--card2);color:var(--text);
-  font-size:1.3em;font-weight:700;text-align:center;
-  transition:border-color .2s;
+  width:220px;padding:16px 24px;border:1px solid var(--border);
+  border-radius:var(--radius);background:var(--card2);color:var(--text);
+  font-family:var(--font-display);font-size:1.4em;font-weight:700;text-align:center;
+  transition:all .25s;
 }
-.dpi-input:focus{outline:none;border-color:var(--primary)}
-.dpi-presets{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.dpi-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,107,53,.15)}
+.dpi-presets{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 .dpi-preset{
-  padding:8px 16px;border:1px solid var(--border);border-radius:8px;
-  background:var(--card2);color:var(--muted);cursor:pointer;
-  font-size:.85em;transition:all .2s;
+  padding:8px 18px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--card2);color:var(--text-secondary);cursor:pointer;
+  font-family:var(--font-display);font-size:.85em;font-weight:500;transition:all .25s;
 }
-.dpi-preset:hover,.dpi-preset.active{border-color:var(--primary);color:var(--primary);background:rgba(245,158,11,.08)}
+.dpi-preset:hover{border-color:var(--primary);color:var(--primary);background:rgba(255,107,53,.06)}
+.dpi-preset.active{border-color:var(--primary);color:var(--primary);background:rgba(255,107,53,.1)}
 
 /* ===== 测试区域 ===== */
 .test-area{
   position:relative;width:700px;height:450px;
-  background:#0d1117;border:2px solid var(--border);
-  border-radius:12px;margin:20px auto;overflow:hidden;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:var(--radius);margin:20px auto;overflow:hidden;
   cursor:none;
 }
 .test-area canvas{display:block}
@@ -125,13 +165,13 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 /* ===== 测试信息栏 ===== */
 .test-hud{
   display:flex;justify-content:space-between;align-items:center;
-  padding:12px 20px;background:var(--card2);
-  border-radius:10px;margin:0 auto;width:700px;
+  padding:14px 24px;background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--radius);margin:0 auto;width:700px;
 }
 .hud-item{text-align:center}
-.hud-label{font-size:.75em;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.hud-value{font-size:1.6em;font-weight:800;color:var(--primary);font-variant-numeric:tabular-nums}
-.hud-value.time{color:var(--accent2)}
+.hud-label{font-size:.7em;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.hud-value{font-family:var(--font-display);font-size:1.6em;font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums}
+.hud-value.time{color:var(--accent)}
 .hud-value.score{color:var(--success)}
 
 /* ===== 目标 ===== */
@@ -141,23 +181,23 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 }
 .target-precision{
   width:44px;height:44px;
-  background:radial-gradient(circle,var(--danger) 0%,#991b1b 100%);
-  box-shadow:0 0 12px rgba(239,68,68,.5);
+  background:radial-gradient(circle,var(--danger) 0%,#B91C3C 100%);
+  box-shadow:0 0 16px rgba(244,63,94,.4);
   animation:targetPop .2s ease;
 }
 .target-precision::after{
   content:'';position:absolute;width:14px;height:14px;border-radius:50%;
-  background:rgba(255,255,255,.9);top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(255,255,255,.85);top:50%;left:50%;transform:translate(-50%,-50%);
 }
 .target-micro{
   width:36px;height:36px;
-  background:radial-gradient(circle,var(--primary) 0%,#92400e 100%);
-  box-shadow:0 0 12px rgba(245,158,11,.5);
+  background:radial-gradient(circle,var(--primary) 0%,var(--primary-dim) 100%);
+  box-shadow:0 0 16px rgba(255,107,53,.4);
   animation:targetPop .15s ease;
 }
 .target-micro::after{
   content:'';position:absolute;width:10px;height:10px;border-radius:50%;
-  background:rgba(255,255,255,.9);top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(255,255,255,.85);top:50%;left:50%;transform:translate(-50%,-50%);
 }
 .target.hit{animation:hitFlash .3s ease;pointer-events:none}
 .target.miss{animation:missFlash .3s ease}
@@ -165,25 +205,25 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 /* ===== 中心圆（微调测试） ===== */
 .center-circle{
   position:absolute;width:50px;height:50px;border-radius:50%;
-  background:radial-gradient(circle,var(--accent) 0%,#1e40af 100%);
-  box-shadow:0 0 16px rgba(59,130,246,.4);
+  background:radial-gradient(circle,var(--accent) 0%,#C9A030 100%);
+  box-shadow:0 0 20px rgba(247,197,72,.35);
   top:50%;left:50%;transform:translate(-50%,-50%);
   cursor:none;transition:all .2s;
 }
 .center-circle::after{
   content:'';position:absolute;width:14px;height:14px;border-radius:50%;
-  background:rgba(255,255,255,.85);top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(255,255,255,.8);top:50%;left:50%;transform:translate(-50%,-50%);
 }
 .center-circle.pulse{animation:pulse .6s ease infinite}
 
 /* ===== 进度条 ===== */
 .progress-bar{
-  width:700px;height:6px;background:var(--card2);
-  border-radius:3px;margin:10px auto;overflow:hidden;
+  width:700px;height:4px;background:var(--card3);
+  border-radius:2px;margin:10px auto;overflow:hidden;
 }
 .progress-fill{
-  height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border-radius:3px;transition:width .3s linear;
+  height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));
+  border-radius:2px;transition:width .3s linear;
 }
 
 /* ===== 分数环 ===== */
@@ -192,96 +232,103 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 .score-ring svg{width:120px;height:120px;transform:rotate(-90deg)}
 .score-ring circle{fill:none;stroke-width:8;stroke-linecap:round}
 .score-ring .bg{stroke:var(--border)}
-.score-ring .fg{transition:stroke-dashoffset 1s ease}
-.score-ring .label{font-size:.85em;color:var(--muted);margin-top:8px}
-.score-ring .value{font-size:1.8em;font-weight:800}
+.score-ring .fg{transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)}
+.score-ring .label{font-size:.8em;color:var(--text-secondary);margin-top:8px;font-weight:500}
+.score-ring .value{font-family:var(--font-display);font-size:1.8em;font-weight:700}
 
 /* ===== 结果面板 ===== */
 .result-main{
-  text-align:center;padding:30px;
-  background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(59,130,246,.08));
-  border:1px solid rgba(245,158,11,.2);border-radius:16px;margin:20px 0;
+  text-align:center;padding:36px;
+  background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--radius-lg);margin:20px 0;
+  position:relative;overflow:hidden;
+}
+.result-main::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--primary),var(--accent),transparent);
 }
 .sensitivity-value{
-  font-size:4em;font-weight:900;
-  background:linear-gradient(135deg,var(--primary),var(--accent));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;line-height:1.2;
+  font-family:var(--font-display);
+  font-size:4.5em;font-weight:700;
+  color:var(--primary);line-height:1.1;letter-spacing:-.03em;
 }
-.sensitivity-label{font-size:.9em;color:var(--muted);margin-top:4px}
+.sensitivity-label{font-size:.9em;color:var(--text-secondary);margin-top:6px;font-weight:500}
 .sensitivity-cmd{
-  display:inline-block;padding:10px 24px;background:var(--card2);
-  border:1px solid var(--border);border-radius:8px;margin-top:16px;
-  font-family:'Courier New',monospace;font-size:1.2em;color:var(--primary);
-  cursor:pointer;transition:all .2s;user-select:all;
+  display:inline-block;padding:12px 28px;background:var(--card3);
+  border:1px solid var(--border);border-radius:var(--radius-sm);margin-top:16px;
+  font-family:'SF Mono','Fira Code',monospace;font-size:1.2em;color:var(--primary);
+  cursor:pointer;transition:all .25s;user-select:all;font-weight:500;
 }
-.sensitivity-cmd:hover{border-color:var(--primary);background:rgba(245,158,11,.1)}
+.sensitivity-cmd:hover{border-color:var(--primary);background:rgba(255,107,53,.06)}
 .conv-table{width:100%;border-collapse:collapse;margin:20px 0}
-.conv-table th,.conv-table td{padding:10px 16px;text-align:center;border-bottom:1px solid var(--border)}
-.conv-table th{color:var(--muted);font-size:.8em;text-transform:uppercase;letter-spacing:1px}
-.conv-table td{font-weight:600}
-.conv-table .highlight{color:var(--primary);font-size:1.1em}
+.conv-table th,.conv-table td{padding:12px 16px;text-align:center;border-bottom:1px solid var(--border)}
+.conv-table th{color:var(--muted);font-size:.75em;text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.conv-table td{font-weight:500;font-family:var(--font-display)}
+.conv-table .highlight{color:var(--primary);font-weight:700}
 .tip-box{
-  padding:16px 20px;background:rgba(59,130,246,.06);
-  border:1px solid rgba(59,130,246,.15);border-radius:10px;
-  margin:10px 0;font-size:.9em;color:var(--muted);line-height:1.6;
+  padding:16px 20px;background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--radius);
+  margin:10px 0;font-size:.9em;color:var(--text-secondary);line-height:1.7;
 }
-.tip-box strong{color:var(--accent2)}
+.tip-box strong{color:var(--accent)}
 .range-bar{
   position:relative;height:40px;background:var(--card2);
-  border-radius:20px;margin:20px 0;overflow:visible;
+  border-radius:20px;margin:20px 0;overflow:visible;border:1px solid var(--border);
 }
 .range-fill{
   position:absolute;height:100%;border-radius:20px;
-  background:linear-gradient(90deg,rgba(34,197,94,.15),rgba(245,158,11,.15),rgba(239,68,68,.15));
+  background:linear-gradient(90deg,rgba(45,212,191,.12),rgba(255,107,53,.12),rgba(244,63,94,.12));
 }
 .range-marker{
   position:absolute;top:-8px;width:4px;height:56px;
   background:var(--primary);border-radius:2px;
   transform:translateX(-50%);
-  box-shadow:0 0 8px rgba(245,158,11,.6);
+  box-shadow:0 0 10px rgba(255,107,53,.5);
 }
-.range-labels{display:flex;justify-content:space-between;font-size:.75em;color:var(--muted);margin-top:4px}
+.range-labels{display:flex;justify-content:space-between;font-size:.75em;color:var(--text-secondary);margin-top:4px;font-weight:500}
 .test-score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
 .test-score-card{
-  padding:16px;background:var(--card2);border-radius:10px;text-align:center;
-  border:1px solid var(--border);
+  padding:20px;background:var(--card2);border-radius:var(--radius);text-align:center;
+  border:1px solid var(--border);transition:border-color .25s;
 }
-.test-score-card .name{font-size:.8em;color:var(--muted);margin-bottom:6px}
-.test-score-card .score{font-size:1.6em;font-weight:800}
-.test-score-card .detail{font-size:.75em;color:var(--muted);margin-top:4px}
+.test-score-card:hover{border-color:var(--primary)}
+.test-score-card .name{font-size:.75em;color:var(--text-secondary);margin-bottom:8px;font-weight:500;text-transform:uppercase;letter-spacing:1px}
+.test-score-card .score{font-family:var(--font-display);font-size:1.8em;font-weight:700}
+.test-score-card .detail{font-size:.75em;color:var(--muted);margin-top:6px}
 
 /* ===== 步骤指示器 ===== */
-.steps{display:flex;justify-content:center;gap:8px;margin:20px 0}
+.steps{display:flex;justify-content:center;gap:10px;margin:20px 0}
 .step{
-  width:10px;height:10px;border-radius:50%;background:var(--border);
-  transition:all .3s;
+  width:8px;height:8px;border-radius:50%;background:var(--border);
+  transition:all .3s cubic-bezier(.4,0,.2,1);
 }
-.step.active{background:var(--primary);box-shadow:0 0 8px rgba(245,158,11,.4)}
+.step.active{background:var(--primary);box-shadow:0 0 10px rgba(255,107,53,.4);transform:scale(1.3)}
 .step.done{background:var(--success)}
 
 /* ===== 测试说明 ===== */
 .test-instructions{
-  text-align:center;padding:16px;background:var(--card2);
-  border-radius:10px;margin:10px auto;width:700px;
+  text-align:center;padding:18px 24px;background:var(--card2);
+  border:1px solid var(--border);border-radius:var(--radius);margin:10px auto;width:700px;
 }
-.test-instructions p{color:var(--muted);font-size:.9em;line-height:1.6}
+.test-instructions p{color:var(--text-secondary);font-size:.9em;line-height:1.7}
 .test-instructions .key{color:var(--primary);font-weight:600}
 
 /* ===== 倒计时覆盖层 ===== */
 .countdown-overlay{
   position:absolute;top:0;left:0;width:100%;height:100%;
   display:flex;align-items:center;justify-content:center;
-  background:rgba(13,17,23,.85);z-index:10;
-  font-size:5em;font-weight:900;color:var(--primary);
+  background:rgba(10,10,10,.9);z-index:10;
+  font-family:var(--font-display);font-size:5em;font-weight:700;color:var(--primary);
 }
 .countdown-overlay.hidden{display:none}
 
 /* ===== 复制提示 ===== */
 .copy-toast{
-  position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);
-  padding:12px 24px;background:var(--success);color:#000;
-  border-radius:8px;font-weight:600;transition:transform .3s ease;z-index:10000;
+  position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-120px);
+  padding:14px 28px;background:var(--success);color:#0A0A0A;
+  border-radius:var(--radius);font-family:var(--font-display);font-weight:600;
+  transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:10000;
+  box-shadow:0 8px 24px rgba(45,212,191,.3);
 }
 .copy-toast.show{transform:translateX(-50%) translateY(0)}
 
@@ -294,30 +341,31 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 .ad-sidebar.left{left:12px}
 .ad-sidebar.right{right:12px}
 .ad-card{
-  background:var(--card);border:2px dashed var(--border);
-  border-radius:10px;padding:14px 10px;text-align:center;
-  pointer-events:auto;cursor:pointer;transition:all .3s;
+  background:var(--card);border:1px dashed var(--border);
+  border-radius:var(--radius);padding:16px 12px;text-align:center;
+  pointer-events:auto;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);
   position:relative;overflow:hidden;
   animation:adFloat 3s ease-in-out infinite;
 }
 .ad-card:nth-child(2){animation-delay:.5s}
 .ad-card:nth-child(3){animation-delay:1s}
 .ad-card:hover{
-  border-color:var(--primary);transform:scale(1.05);
-  box-shadow:0 4px 20px rgba(245,158,11,.2);
+  border-color:var(--primary);transform:scale(1.04);
+  box-shadow:0 4px 20px rgba(255,107,53,.15);
 }
 .ad-card .ad-tag{
   position:absolute;top:6px;right:6px;
-  font-size:.6em;color:var(--muted);
+  font-size:.55em;color:var(--muted);font-weight:600;
   background:var(--card2);padding:2px 6px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:.5px;
 }
 .ad-card .ad-icon{font-size:1.8em;margin-bottom:6px}
-.ad-card .ad-title{font-size:.8em;font-weight:700;color:var(--primary);margin-bottom:4px}
-.ad-card .ad-desc{font-size:.65em;color:var(--muted);line-height:1.4}
+.ad-card .ad-title{font-family:var(--font-display);font-size:.8em;font-weight:700;color:var(--primary);margin-bottom:4px}
+.ad-card .ad-desc{font-size:.65em;color:var(--text-secondary);line-height:1.5}
 .ad-card .ad-price{
-  display:inline-block;margin-top:6px;padding:3px 10px;
-  background:linear-gradient(135deg,var(--danger),#dc2626);
-  color:#fff;border-radius:12px;font-size:.65em;font-weight:700;
+  display:inline-block;margin-top:8px;padding:4px 12px;
+  background:var(--danger);color:#fff;border-radius:12px;
+  font-size:.6em;font-weight:700;font-family:var(--font-display);
 }
 @keyframes adFloat{
   0%,100%{transform:translateY(0)}
@@ -327,15 +375,35 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
   .ad-sidebar{display:none}
 }
 
+/* ===== Footer ===== */
+.footer-links{
+  text-align:center;margin-top:28px;padding-top:20px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+}
+.footer-links a{
+  color:var(--text-secondary);font-size:.85em;text-decoration:none;
+  transition:color .2s;display:inline-flex;align-items:center;gap:6px;font-weight:500;
+}
+.footer-links a:hover{color:var(--primary)}
+.footer-links .divider{color:var(--border);font-size:.8em}
+.theme-btn{
+  background:none;border:1px solid var(--border);color:var(--text-secondary);
+  cursor:pointer;font-size:1em;padding:6px 12px;border-radius:var(--radius-sm);
+  transition:all .2s;font-family:var(--font-body);
+}
+.theme-btn:hover{border-color:var(--primary);color:var(--primary);background:rgba(255,107,53,.05)}
+
 /* ===== 响应式 ===== */
 @media(max-width:760px){
   .test-area,.test-hud,.progress-bar,.test-instructions{width:100%!important}
   .test-area{height:350px!important}
-  .card{padding:20px}
+  .card{padding:24px}
   h1{font-size:1.6em}
-  .sensitivity-value{font-size:2.8em}
+  .sensitivity-value{font-size:3em}
   .test-score-grid{grid-template-columns:1fr}
   .score-ring-container{gap:20px}
+  .logo-area img{width:36px;height:36px}
 }
 </style>
 </head>
@@ -355,21 +423,21 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 <div class="ad-sidebar left">
   <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>{this.style.transform='';window.open('https://github.com/2432448868','_blank')},200)">
     <span class="ad-tag">广告</span>
-    <div class="ad-icon">💰</div>
+    <div class="ad-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="var(--primary)" stroke-width="2"/><text x="14" y="18" text-anchor="middle" fill="var(--primary)" font-size="12" font-weight="bold">$</text></svg></div>
     <div class="ad-title">广告位招租</div>
     <div class="ad-desc">月租仅需 ¥998<br>送 CS2 优先匹配</div>
     <div class="ad-price">限时打折</div>
   </div>
   <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>{this.style.transform='';window.open('https://github.com/2432448868','_blank')},200)">
     <span class="ad-tag">推广</span>
-    <div class="ad-icon">🎮</div>
+    <div class="ad-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="8" y="4" width="12" height="18" rx="6" stroke="var(--success)" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="12" stroke="var(--success)" stroke-width="2"/></svg></div>
     <div class="ad-title">CS2 代练</div>
     <div class="ad-desc">C+ → 魔王 S<br>包月只要 298</div>
     <div class="ad-price">假一赔十</div>
   </div>
   <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>{this.style.transform='';window.open('https://github.com/2432448868','_blank')},200)">
     <span class="ad-tag">合作</span>
-    <div class="ad-icon">🖱️</div>
+    <div class="ad-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="8" y="4" width="12" height="18" rx="6" stroke="var(--success)" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="12" stroke="var(--success)" stroke-width="2"/></svg></div>
     <div class="ad-title">鼠标推荐</div>
     <div class="ad-desc">用了这个鼠标<br>自动爆头率 +200%</div>
     <div class="ad-price">主播同款</div>
@@ -380,21 +448,21 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 <div class="ad-sidebar right">
   <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>{this.style.transform='';window.open('https://github.com/2432448868','_blank')},200)">
     <span class="ad-tag">招商</span>
-    <div class="ad-icon">🏆</div>
+    <div class="ad-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="8" y="4" width="12" height="18" rx="6" stroke="var(--success)" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="12" stroke="var(--success)" stroke-width="2"/></svg></div>
     <div class="ad-title">此处广告<br>虚位以待</div>
     <div class="ad-desc">老板大气一点<br>直接包年打八折</div>
     <div class="ad-price">¥8888/年</div>
   </div>
   <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>{this.style.transform='';window.open('https://github.com/2432448868','_blank')},200)">
     <span class="ad-tag">爆款</span>
-    <div class="ad-icon">⌨️</div>
+    <div class="ad-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="8" y="4" width="12" height="18" rx="6" stroke="var(--success)" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="12" stroke="var(--success)" stroke-width="2"/></svg></div>
     <div class="ad-title">机械键盘</div>
     <div class="ad-desc">青轴 Cherry 轴体<br>吵到室友退学</div>
     <div class="ad-price">宿舍神器</div>
   </div>
   <div class="ad-card" onclick="this.style.transform='scale(0.9)';setTimeout(()=>{this.style.transform='';window.open('https://github.com/2432448868','_blank')},200)">
     <span class="ad-tag">神秘</span>
-    <div class="ad-icon">🔮</div>
+    <div class="ad-icon"><svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="8" y="4" width="12" height="18" rx="6" stroke="var(--success)" stroke-width="2"/><line x1="14" y1="4" x2="14" y2="12" stroke="var(--success)" stroke-width="2"/></svg></div>
     <div class="ad-title">玄学灵敏度</div>
     <div class="ad-desc">大师开光灵敏度<br>用了必上 FACEIT</div>
     <div class="ad-price">心诚则灵</div>
@@ -406,48 +474,45 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
   <!-- ========== 欢迎界面 ========== -->
   <div id="welcomeScreen" class="screen active">
     <div class="card" style="margin-top:40px">
-      <h1>🎯 wkl CS2灵敏度生成器</h1>
+      <div class="logo-area">
+        <img src="assets/logo.svg" alt="kale's cs2 DPI TEST logo">
+      </div>
+      <h1>kale's <span class="accent">cs2</span> DPI TEST</h1>
       <p class="subtitle">通过 3 项专业测试，科学计算你的最佳 CS2 灵敏度</p>
 
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:30px 0">
-        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:12px;background:var(--card2)">
-          <div style="font-size:2em;margin-bottom:8px">🎯</div>
-          <div style="font-weight:700;margin-bottom:4px">追踪测试</div>
-          <div style="font-size:.8em;color:var(--muted)">鼠标跟随移动目标<br>测试你的追踪稳定性</div>
+        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:var(--radius);background:var(--card2);transition:border-color .25s" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:2em;margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="var(--primary)" stroke-width="2"/><circle cx="16" cy="16" r="8" stroke="var(--primary)" stroke-width="2"/><circle cx="16" cy="16" r="3" fill="var(--primary)"/></svg></div>
+          <div style="font-family:var(--font-display);font-weight:600;margin-bottom:4px">追踪测试</div>
+          <div style="font-size:.8em;color:var(--text-secondary)">鼠标跟随移动目标<br>测试追踪稳定性</div>
         </div>
-        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:12px;background:var(--card2)">
-          <div style="font-size:2em;margin-bottom:8px">🔫</div>
-          <div style="font-weight:700;margin-bottom:4px">精准度测试</div>
-          <div style="font-size:.8em;color:var(--muted)">点击随机出现的目标<br>测试你的定位准确度</div>
+        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:var(--radius);background:var(--card2);transition:border-color .25s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:2em;margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="4" y="14" width="20" height="4" rx="2" fill="var(--success)"/><rect x="22" y="10" width="4" height="12" rx="2" fill="var(--success)"/><circle cx="26" cy="16" r="3" fill="var(--success)"/></svg></div>
+          <div style="font-family:var(--font-display);font-weight:600;margin-bottom:4px">精准度测试</div>
+          <div style="font-size:.8em;color:var(--text-secondary)">点击随机出现的目标<br>测试定位准确度</div>
         </div>
-        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:12px;background:var(--card2)">
-          <div style="font-size:2em;margin-bottom:8px">⚡</div>
-          <div style="font-weight:700;margin-bottom:4px">微调测试</div>
-          <div style="font-size:.8em;color:var(--muted)">快速微调瞄准近距离目标<br>测试你的精细控制力</div>
+        <div class="card-sm" style="text-align:center;border:1px solid var(--border);border-radius:var(--radius);background:var(--card2);transition:border-color .25s" onmouseover="this.style.borderColor='var(--success)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:2em;margin-bottom:8px"><svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M18 4L8 18h6l-2 10 10-14h-6l2-10z" fill="var(--accent)"/></svg></div>
+          <div style="font-family:var(--font-display);font-weight:600;margin-bottom:4px">微调测试</div>
+          <div style="font-size:.8em;color:var(--text-secondary)">快速微调瞄准近距离目标<br>测试精细控制力</div>
         </div>
       </div>
 
       <div class="tip-box" style="text-align:center">
-        <strong>⚠️ 测试前准备：</strong>请关闭鼠标加速（Windows 指针精确度），使用你日常玩 CS2 时的鼠标和鼠标垫。<br>
+        <strong><svg width="16" height="16" viewBox="0 0 16 16" fill="var(--primary)" style="vertical-align:middle;margin-right:4px"><path d="M8 1l7 13H1L8 1z"/><path d="M8 6v4M8 12v0" stroke="#fff" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>测试前准备：</strong>请关闭鼠标加速（Windows 指针精确度），使用你日常玩 CS2 时的鼠标和鼠标垫。<br>
         测试过程中请使用你<strong>最自然的握鼠姿势</strong>，不要刻意控制。
       </div>
 
       <div class="btn-group">
         <button class="btn btn-primary" onclick="showScreen('dpiScreen')">开始测试 →</button>
       </div>
-      <div style="text-align:center;margin-top:24px">
-        <a href="https://github.com/2432448868" target="_blank" rel="noopener"
-           style="color:var(--muted);font-size:.85em;text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:6px"
-           onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--muted)'">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub: 2432448868
+      <div class="footer-links">
+        <a href="https://github.com/2432448868" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
         </a>
-        <span style="margin:0 12px;color:var(--border)">|</span>
-        <button onclick="toggleTheme()" id="themeToggle"
-           style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2em;padding:4px 8px;border-radius:6px;transition:all .2s"
-           onmouseover="this.style.color='var(--primary)';this.style.background='rgba(245,158,11,.1)'"
-           onmouseout="this.style.color='var(--muted)';this.style.background='none'"
-           title="切换白天/黑夜模式">🌙</button>
+        <span class="divider">|</span>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeToggle" title="切换白天/黑夜模式">🌙 夜间模式</button>
       </div>
     </div>
   </div>
@@ -467,7 +532,6 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 
       <div class="dpi-presets">
         <div class="dpi-preset" onclick="setDPI(400)">400</div>
-        <div class="dpi-preset" onclick="setDPI(800)">800</div>
         <div class="dpi-preset active" onclick="setDPI(800)">800</div>
         <div class="dpi-preset" onclick="setDPI(1000)">1000</div>
         <div class="dpi-preset" onclick="setDPI(1200)">1200</div>
@@ -476,7 +540,7 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
       </div>
 
       <div class="tip-box" style="margin-top:24px">
-        <strong>💡 不确定 DPI？</strong><br>
+        <strong><svg width="16" height="16" viewBox="0 0 16 16" fill="var(--accent)" style="vertical-align:middle;margin-right:4px"><circle cx="8" cy="8" r="7" fill="none" stroke="var(--accent)" stroke-width="1.5"/><path d="M8 5v3M8 10v0" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/></svg>不确定 DPI？</strong><br>
         常见鼠标默认 DPI：罗技 GPW/GPX 系列默认 800，雷蛇 Viper 系列默认 800，<br>
         卓威 ZA 系列默认 800/1600。你也可以在鼠标驱动软件中精确查看。
       </div>
@@ -509,10 +573,10 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
     </div>
   </div>
 
-  <!-- ========== 追踪测试结果 ========== -->
+  <!-- ==========追踪测试结果 ========== -->
   <div id="trackingResultScreen" class="screen">
     <div class="card" style="margin-top:20px;text-align:center">
-      <h2>📊 追踪测试结果</h2>
+      <h2>追踪测试结果</h2>
       <div class="score-ring-container">
         <div class="score-ring">
           <svg viewBox="0 0 120 120">
@@ -554,7 +618,7 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
   <!-- ========== 精准度测试结果 ========== -->
   <div id="precisionResultScreen" class="screen">
     <div class="card" style="margin-top:20px;text-align:center">
-      <h2>📊 精准度测试结果</h2>
+      <h2>精准度测试结果</h2>
       <div class="score-ring-container">
         <div class="score-ring">
           <svg viewBox="0 0 120 120">
@@ -597,7 +661,7 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
   <!-- ========== 微调测试结果 ========== -->
   <div id="microResultScreen" class="screen">
     <div class="card" style="margin-top:20px;text-align:center">
-      <h2>📊 微调测试结果</h2>
+      <h2>微调测试结果</h2>
       <div class="score-ring-container">
         <div class="score-ring">
           <svg viewBox="0 0 120 120">
@@ -619,7 +683,10 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
   <!-- ========== 最终结果 ========== -->
   <div id="resultScreen" class="screen">
     <div class="card" style="margin-top:20px">
-      <h1 style="font-size:1.6em;margin-bottom:4px">🎯 你的 CS2 专属灵敏度</h1>
+      <div class="logo-area">
+        <img src="assets/logo.svg" alt="logo">
+      </div>
+      <h1 style="font-size:1.6em;margin-bottom:4px">你的 <span class="accent">CS2</span> 专属灵敏度</h1>
       <p class="subtitle" id="resultSubtitle">基于你的测试数据生成</p>
 
       <div class="result-main">
@@ -650,34 +717,28 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
       </div>
 
       <!-- 各测试得分 -->
-      <h3 style="text-align:left;margin-top:24px">📈 测试数据总览</h3>
+      <h3 style="text-align:left;margin-top:24px">测试数据总览</h3>
       <div class="test-score-grid" id="testScoreGrid"></div>
 
       <!-- 转换表 -->
-      <h3 style="text-align:left;margin-top:24px">🔄 不同 DPI 下的灵敏度对照</h3>
+      <h3 style="text-align:left;margin-top:24px">不同 DPI 下的灵敏度对照</h3>
       <table class="conv-table" id="convTable"></table>
 
       <!-- 分析建议 -->
-      <h3 style="text-align:left;margin-top:24px">💡 个性化建议</h3>
+      <h3 style="text-align:left;margin-top:24px">个性化建议</h3>
       <div id="adviceContainer"></div>
 
       <div class="btn-group" style="margin-top:30px">
-        <button class="btn btn-outline" onclick="resetAll()">🔄 重新测试</button>
-        <button class="btn btn-accent" onclick="copyAll()">📋 复制灵敏度</button>
+        <button class="btn btn-outline" onclick="resetAll()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align:middle;margin-right:4px"><path d="M2 8a6 6 0 0110.89-3.48A1 1 0 0014.47 3 8 8 0 104 12.47a1 1 0 10-1.54-1.27A6 6 0 012 8z" fill="currentColor"/><path d="M14 2v4h-4" fill="currentColor"/></svg>重新测试</button>
+        <button class="btn btn-accent" onclick="copyAll()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align:middle;margin-right:4px"><rect x="5" y="5" width="9" height="9" rx="1" fill="currentColor"/><path d="M3 11V3a1 1 0 011-1h8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>复制灵敏度</button>
       </div>
-      <div style="text-align:center;margin-top:20px">
-        <a href="https://github.com/2432448868" target="_blank" rel="noopener"
-           style="color:var(--muted);font-size:.85em;text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:6px"
-           onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--muted)'">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub: 2432448868
+      <div class="footer-links">
+        <a href="https://github.com/2432448868" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
         </a>
-        <span style="margin:0 12px;color:var(--border)">|</span>
-        <button onclick="toggleTheme()" class="themeToggleBtn"
-           style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.2em;padding:4px 8px;border-radius:6px;transition:all .2s"
-           onmouseover="this.style.color='var(--primary)';this.style.background='rgba(245,158,11,.1)'"
-           onmouseout="this.style.color='var(--muted)';this.style.background='none'"
-           title="切换白天/黑夜模式">🌙</button>
+        <span class="divider">|</span>
+        <button class="theme-btn" onclick="toggleTheme()" title="切换白天/黑夜模式">🌙 夜间模式</button>
       </div>
     </div>
   </div>
@@ -690,7 +751,7 @@ h3{font-size:1.1em;font-weight:600;color:var(--muted);margin-bottom:20px;text-al
 // ============================================
 const State = {
   dpi: 800,
-  // 追踪测试
+  //追踪测试
   trackingScore: 0,
   trackingAccuracy: 0,
   trackingAvgOffset: 0,
@@ -1338,17 +1399,17 @@ function calculateResult() {
   // 测试得分网格
   document.getElementById('testScoreGrid').innerHTML = `
     <div class="test-score-card">
-      <div class="name">🎯 追踪测试</div>
+      <div class="name">追踪测试</div>
       <div class="score" style="color:var(--accent2)">${tScore}</div>
       <div class="detail">命中率 ${State.trackingAccuracy}% | 偏移 ${State.trackingAvgOffset}px</div>
     </div>
     <div class="test-score-card">
-      <div class="name">🔫 精准度测试</div>
+      <div class="name">精准度测试</div>
       <div class="score" style="color:var(--primary)">${pScore}</div>
       <div class="detail">命中 ${State.precisionHits}/${State.precisionTotal} | 反应 ${State.precisionAvgTime}ms</div>
     </div>
     <div class="test-score-card">
-      <div class="name">⚡ 微调测试</div>
+      <div class="name">微调测试</div>
       <div class="score" style="color:var(--success)">${mScore}</div>
       <div class="detail">命中 ${State.microHits}/${State.microTotal} | 反应 ${State.microAvgTime}ms</div>
     </div>
@@ -1376,37 +1437,37 @@ function calculateResult() {
   let adviceHtml = '';
   if (tScore < 50) {
     adviceHtml += `<div class="tip-box">
-      <strong>🎯 追踪建议：</strong>你的追踪稳定性偏低。建议在游戏中多练习追踪移动目标（如 Aimg responders 训练）。
+      <strong>追踪建议：</strong>你的追踪稳定性偏低。建议在游戏中多练习追踪移动目标（如 Aimg responders 训练）。
       当前推荐的灵敏度偏高，这是为了补偿追踪不足。随着追踪能力提升，可以适当降低灵敏度。
     </div>`;
   } else if (tScore >= 80) {
     adviceHtml += `<div class="tip-box">
-      <strong>🎯 追踪出色！</strong>你的追踪能力很强，推荐使用偏低灵敏度来最大化这个优势。
+      <strong>追踪出色！</strong>你的追踪能力很强，推荐使用偏低灵敏度来最大化这个优势。
       低灵敏度 + 强追踪 = 稳定的中远距离对枪能力。
     </div>`;
   }
 
   if (pScore < 50) {
     adviceHtml += `<div class="tip-box">
-      <strong>🔫 精准度建议：</strong>点击精准度有提升空间。建议练习 Aimg Six Shots 或类似精准度训练。
+      <strong>精准度建议：</strong>点击精准度有提升空间。建议练习 Aimg Six Shots 或类似精准度训练。
       注意不要为了追求速度而牺牲准确度，先准后快。
     </div>`;
   }
 
   if (mScore < 50) {
     adviceHtml += `<div class="tip-box">
-      <strong>⚡ 微调建议：</strong>精细控制力需要加强。灵敏度如果太高，微调时容易"过头"。
+      <strong>微调建议：</strong>精细控制力需要加强。灵敏度如果太高，微调时容易"过头"。
       建议从推荐灵敏度开始，如果微调经常过头，尝试降低 0.2-0.3 的灵敏度。
     </div>`;
   } else if (mScore >= 80) {
     adviceHtml += `<div class="tip-box">
-      <strong>⚡ 微调出色！</strong>你的精细控制力很好，可以放心使用较低的灵敏度。
+      <strong>微调出色！</strong>你的精细控制力很好，可以放心使用较低的灵敏度。
       低灵敏度在 CS2 中的优势是：甩枪后能快速微调回准，非常适合peek对枪。
     </div>`;
   }
 
   adviceHtml += `<div class="tip-box">
-    <strong>💡 通用建议：</strong>
+    <strong>通用建议：</strong>
     <ul style="margin:8px 0 0 16px;line-height:1.8">
       <li>将 <code style="background:var(--card2);padding:2px 6px;border-radius:4px">sensitivity ${roundedSens.toFixed(2)}</code> 输入 CS2 控制台即可使用</li>
       <li>确保关闭 Windows 鼠标加速（控制面板 → 鼠标 → 指针选项 → 取消"提高指针精确度"）</li>
@@ -1451,8 +1512,8 @@ function toggleTheme() {
   const isLight = document.body.classList.toggle('light-mode');
   localStorage.setItem('cs2-theme', isLight ? 'light' : 'dark');
   // 同步所有切换按钮的图标
-  const icon = isLight ? '☀️' : '🌙';
-  document.querySelectorAll('#themeToggle, .themeToggleBtn').forEach(btn => btn.textContent = icon);
+  const icon = isLight ? '☀️ 白天模式' : '🌙 夜间模式';
+  document.querySelectorAll('#themeToggle, .theme-btn').forEach(btn => btn.textContent = icon);
 }
 
 // 初始化主题（读取本地缓存）
@@ -1462,7 +1523,7 @@ function toggleTheme() {
   const isLight = saved === 'light' || (!saved && prefersLight);
   if (isLight) {
     document.body.classList.add('light-mode');
-    document.querySelectorAll('#themeToggle, .themeToggleBtn').forEach(btn => btn.textContent = '☀️');
+    document.querySelectorAll('#themeToggle, .theme-btn').forEach(btn => btn.textContent = '☀️ 白天模式');
   }
 })();
 </script>

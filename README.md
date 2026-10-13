@@ -1,8 +1,8 @@
-# 🎯 wkl CS2 灵敏度生成器
+# 🎯 kale's cs2 DPI TEST
 
 > 通过 3 项专业鼠标测试，科学计算你的最佳 CS2 灵敏度
 
-** 在线体验：https://2432448868.github.io/**
+**在线体验：https://2432448868.github.io/**
 
 ---
 
@@ -89,6 +89,9 @@ cm/360° = (360 / (sensitivity × DPI × 0.022)) × 2.54
 2432448868.github.io/
 ├── index.html          # 主页面（单文件应用）
 ├── README.md           # 项目文档
+├── assets/
+│   ├── logo.svg        # Logo 图标
+│   └── favicon.svg     # 网站 Favicon
 └── .github/
     └── workflows/
         └── pages.yml   # GitHub Pages 自动部署

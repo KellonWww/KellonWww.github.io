@@ -2,7 +2,7 @@
 
 > 通过 3 项专业鼠标测试，科学计算你的最佳 CS2 灵敏度
 
-**在线体验：https://2432448868.github.io/**
+**在线体验：https://KellonWww.github.io/**
 
 ---
 
@@ -57,7 +57,7 @@ cm/360° = (360 / (sensitivity × DPI × 0.022)) × 2.54
 
 ## 使用方式
 
-1. 打开 https://2432448868.github.io/
+1. 打开 https://KellonWww.github.io/
 2. 输入你的鼠标 DPI（可在鼠标驱动软件中查看）
 3. 依次完成 3 项测试
 4. 获取推荐灵敏度，输入 CS2 控制台：
@@ -86,7 +86,7 @@ cm/360° = (360 / (sensitivity × DPI × 0.022)) × 2.54
 ## 项目结构
 
 ```
-2432448868.github.io/
+KellonWww.github.io/
 ├── index.html          # 主页面（单文件应用）
 ├── README.md           # 项目文档
 ├── assets/
@@ -101,7 +101,7 @@ cm/360° = (360 / (sensitivity × DPI × 0.022)) × 2.54
 
 ## 开发者
 
-**[2432448868](https://github.com/2432448868)** — GitHub 主页
+**[KellonWww](https://github.com/KellonWww)** — GitHub 主页
 
 ---
 
